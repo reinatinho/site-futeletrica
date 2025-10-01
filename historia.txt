@@ -1,0 +1,5 @@
+História
+O grupo teve início em 2013, fundado por estudantes de engenharia elétrica da UFPR. O primeiro jogo, organizado por Eduardo Kesller, aconteceu na quadra da STARK às 23:00h. Ao longo dos anos, o grupo expandiu seu alcance, atraindo membros de diversas áreas e enriquecendo sua diversidade.
+Em 2018, Renato Trevizan assumiu a administração, trazendo consigo novas ideias e entusiasmo. No ano seguinte, em 2019, Guilherme Cruz assumiu a presidência, liderando com determinação.
+Em 2020, a diretoria de marketing foi oficialmente estabelecida, com Jimmy Antony encarregado de criar o perfil do Instagram para promover o grupo de maneira mais eficaz.
+E em 2022, Renato Trevizan desenvolveu um programa em Python para realizar o sorteio dos times, proporcionando uma organização mais eficiente nos jogos. Em 2023, Pedro Mantovani criou o aplicativo do Futeletrica, com o apoio de Renato e Erik Nayan, realizando ajustes para melhorar a experiência dos membros do grupo.

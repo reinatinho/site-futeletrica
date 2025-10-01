@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-logo">
+            <img src="{% static 'images/logo.png' %}" alt="Futeletrica 2013" class="hero-logo-img">
+        </div>
+        <h1 class="hero-title">Futeletrica 2013</h1>
+        <p class="hero-subtitle">Mais que um time, uma família</p>
+        <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-number">12</span>
+                <span class="stat-label">Anos</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">100+</span>
+                <span class="stat-label">Jogadores</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">500+</span>
+                <span class="stat-label">Jogos</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="historia section">
+    <div class="container">
+        <h2 class="section-title">Nossa História</h2>
+        <div class="historia-content">
+            <div class="historia-text">
+                {% for paragrafo in historia|split:"\n\n" %}
+                    {% if paragrafo %}
+                        <p>{{ paragrafo }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="galeria section">
+    <div class="container">
+        <h2 class="section-title">Galeria de Fotos</h2>
+        <div class="galeria-grid">
+            <div class="galeria-item">
+                <img src="{% static 'images/galeria1.jpg' %}" alt="Futeletrica - Jogo 1" class="galeria-img">
+            </div>
+            <div class="galeria-item">
+                <img src="{% static 'images/galeria2.jpg' %}" alt="Futeletrica - Jogo 2" class="galeria-img">
+            </div>
+            <div class="galeria-item">
+                <img src="{% static 'images/galeria3.jpg' %}" alt="Futeletrica - Jogo 3" class="galeria-img">
+            </div>
+            <div class="galeria-item">
+                <img src="{% static 'images/galeria4.jpg' %}" alt="Futeletrica - Jogo 4" class="galeria-img">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="regras section">
+    <div class="container">
+        <h2 class="section-title">Nossas Regras</h2>
+        <div class="regras-grid">
+            {% for regra in regras %}
+            <div class="regra-item">
+                <div class="regra-number">{{ forloop.counter }}</div>
+                <p class="regra-text">{{ regra }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="parceiro section">
+    <div class="container">
+        <h2 class="section-title">Nosso Parceiro</h2>
+        <div class="parceiro-content">
+            <div class="parceiro-info">
+                <div class="parceiro-logo">
+                    <img src="{% static 'images/chinelinho.webp' %}" alt="Chinelinho FC" class="chinelinho-logo">
+                </div>
+                <div class="parceiro-text">
+                    <h3>Chinelinho FC</h3>
+                    <p>Nosso aplicativo parceiro tem como objetivo registrar e escalar de forma aleatória os jogos, além de acompanhar a evolução de cada jogador. Uma ferramenta essencial para manter a organização e competitividade do nosso grupo.</p>
+                    <div class="parceiro-code">
+                        <span class="code-label">Nosso código:</span>
+                        <span class="code-value">J19VJR</span>
+                    </div>
+                    <div class="parceiro-features">
+                        <div class="feature">
+                            <i class="fas fa-users"></i>
+                            <span>Escalação Automática</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Acompanhamento de Performance</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-calendar"></i>
+                            <span>Gestão de Jogos</span>
+                        </div>
+                    </div>
+                    <div class="download-buttons">
+                        <a href="https://play.google.com/store/apps/details?id=br.com.chinelinhofc&pli=1" target="_blank" class="btn btn-download">
+                            <i class="fab fa-google-play"></i>
+                            Download Android
+                        </a>
+                        <a href="https://apps.apple.com/br/app/chinelinho-fc/id1234567890" target="_blank" class="btn btn-download">
+                            <i class="fab fa-apple"></i>
+                            Download iOS
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Acompanhe nossa evolução</h2>
+            <p>Veja as estatísticas e performance do time</p>
+            <a href="{% url 'main:dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-chart-bar"></i>
+                Ver Dashboard
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
