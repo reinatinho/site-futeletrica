@@ -102,6 +102,7 @@ body {
     background: var(--black);
     position: relative;
     overflow: hidden;
+    z-index: 1;
 }
 
 .hero::before {
@@ -226,10 +227,13 @@ body {
 
 /* Seções */
 .section {
-    padding: 100px 0;
+    padding: 120px 0 100px 0;
     position: relative;
     overflow: hidden;
+    z-index: 1;
+    background-color: var(--black);
     transition: all 0.3s ease;
+    margin-bottom: 0;
 }
 
 .section::before {
@@ -241,6 +245,7 @@ body {
     height: 1px;
     background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.3) 50%, transparent 100%);
     opacity: 0.5;
+    z-index: -1;
 }
 
 .section:first-of-type::before {
@@ -252,7 +257,7 @@ body {
 }
 
 .section:hover {
-    transform: translateY(-2px);
+    transform: none;
 }
 
 .container {
@@ -274,6 +279,7 @@ body {
     color: var(--primary-yellow);
     position: relative;
     transition: all 0.3s ease;
+    scroll-margin-top: 100px;
 }
 
 .section-title:hover {
@@ -301,11 +307,17 @@ body {
 /* História */
 .historia {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 50%, rgba(255, 215, 0, 0.05) 100%);
+    z-index: 2;
+    position: relative;
+    margin-top: 0;
+    padding-top: 80px;
 }
 
 .historia-text {
     margin: 0 auto;
     max-width: 800px;
+    position: relative;
+    z-index: 3;
 }
 
 .historia-text p {
@@ -315,11 +327,15 @@ body {
     color: var(--white);
     opacity: 0.9;
     text-align: justify;
+    transform: translateY(0);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 /* Galeria */
 .galeria {
     background: var(--black);
+    z-index: 3;
+    position: relative;
 }
 
 .galeria-grid {
@@ -376,6 +392,8 @@ body {
 /* Regras */
 .regras {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.03) 0%, transparent 50%, rgba(255, 215, 0, 0.03) 100%);
+    z-index: 4;
+    position: relative;
 }
 
 .regras-grid {
@@ -425,6 +443,8 @@ body {
 /* Parceiro */
 .parceiro {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, transparent 50%, rgba(255, 215, 0, 0.08) 100%);
+    z-index: 5;
+    position: relative;
 }
 
 .parceiro-content {
@@ -575,6 +595,8 @@ body {
 .cta {
     background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--secondary-yellow) 100%);
     color: var(--black);
+    z-index: 6;
+    position: relative;
 }
 
 .cta-content {
@@ -913,45 +935,32 @@ body {
     }
 }
 
-.section {
-    animation: fadeInUp 0.8s ease-out;
+/* Remoção das animações CSS automáticas para evitar conflitos
+   As animações serão controladas via JavaScript */
+
+/* Garantir que não há sobreposição de conteúdo */
+main {
+    position: relative;
+    z-index: 1;
+    background-color: var(--black);
 }
 
-/* Adicionar animação staggered aos itens da galeria */
-.galeria-item {
-    opacity: 0;
-    transform: translateY(30px);
+/* Melhorar transições suaves entre seções */
+.section + .section {
+    border-top: 1px solid rgba(255, 215, 0, 0.1);
+    margin-top: 0;
 }
 
-.galeria-item:nth-child(1) {
-    animation: fadeInUp 0.8s ease-out 0.6s both;
-}
-
-.galeria-item:nth-child(2) {
-    animation: fadeInUp 0.8s ease-out 0.7s both;
-}
-
-.galeria-item:nth-child(3) {
-    animation: fadeInUp 0.8s ease-out 0.8s both;
-}
-
-.galeria-item:nth-child(4) {
-    animation: fadeInUp 0.8s ease-out 0.9s both;
-}
-
-/* Animação staggered para regras */
-.regra-item {
-    opacity: 0;
-    transform: translateX(-30px);
-}
-
-.regra-item:nth-child(odd) {
-    animation: slideInLeft 0.8s ease-out 0.8s both;
-}
-
-.regra-item:nth-child(even) {
-    transform: translateX(30px);
-    animation: slideInRight 0.8s ease-out 0.8s both;
+/* Garantir continuidade visual */
+.section::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--black);
+    z-index: 10;
 }
 
 /* Floating animation para features */

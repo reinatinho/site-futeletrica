@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Configurar Intersection Observer para animações
     const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        threshold: 0.2,
+        rootMargin: '0px 0px -100px 0px'
     };
 
     // Observer para títulos de seção
@@ -38,14 +38,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Observer para texto da história
     const historyObserver = new IntersectionObserver(function(entries) {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && !entry.target.classList.contains('animated')) {
+                entry.target.classList.add('animated');
                 const paragraphs = entry.target.querySelectorAll('p');
                 paragraphs.forEach((p, index) => {
                     setTimeout(() => {
                         p.style.opacity = '1';
                         p.style.transform = 'translateY(0)';
-                        p.style.transition = 'all 0.6s ease-out';
-                    }, index * 200);
+                        p.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                    }, index * 300);
                 });
             }
         });
@@ -112,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const paragraphs = historyText.querySelectorAll('p');
         paragraphs.forEach(p => {
             p.style.opacity = '0';
-            p.style.transform = 'translateY(20px)';
+            p.style.transform = 'translateY(30px)';
         });
         historyObserver.observe(historyText);
     }
@@ -250,15 +251,38 @@ document.addEventListener('DOMContentLoaded', function() {
     images.forEach(img => imageObserver.observe(img));
 });
 
-// Adicionar efeito de parallax suave ao hero
-window.addEventListener('scroll', function() {
+// Efeito de parallax removido para evitar sobreposição de conteúdo
+// O parallax pode causar problemas de z-index e sobreposição durante o scroll
+
+// Melhorar transições durante o scroll
+let ticking = false;
+
+function updateOnScroll() {
     const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero');
+    const sections = document.querySelectorAll('.section');
     
-    if (hero && scrolled < hero.offsetHeight) {
-        hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+    sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+        
+        if (isVisible && !section.classList.contains('in-view')) {
+            section.classList.add('in-view');
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }
+    });
+    
+    ticking = false;
+}
+
+function requestTick() {
+    if (!ticking) {
+        requestAnimationFrame(updateOnScroll);
+        ticking = true;
     }
-});
+}
+
+window.addEventListener('scroll', requestTick);
 
 // Contador animado para estatísticas
 function animateCounters() {
