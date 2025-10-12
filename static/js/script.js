@@ -84,6 +84,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, observerOptions);
 
+    // Observer para seção de uniformes
+    const uniformesObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.classList.contains('animated')) {
+                entry.target.classList.add('animated');
+                const img = entry.target.querySelector('.uniformes-img');
+                const text = entry.target.querySelector('.uniformes-text');
+                const features = entry.target.querySelectorAll('.uniformes-features .feature');
+                const solicitar = entry.target.querySelector('.uniformes-solicitar');
+                
+                if (img) {
+                    setTimeout(() => {
+                        img.style.opacity = '1';
+                        img.style.transform = 'translateX(0)';
+                        img.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                    }, 200);
+                }
+                
+                if (text) {
+                    setTimeout(() => {
+                        text.style.opacity = '1';
+                        text.style.transform = 'translateX(0)';
+                        text.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                    }, 400);
+                }
+                
+                features.forEach((feature, index) => {
+                    setTimeout(() => {
+                        feature.style.opacity = '1';
+                        feature.style.transform = 'translateY(0)';
+                        feature.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                    }, 600 + (index * 150));
+                });
+                
+                if (solicitar) {
+                    setTimeout(() => {
+                        solicitar.style.opacity = '1';
+                        solicitar.style.transform = 'translateY(0)';
+                        solicitar.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                    }, 1000);
+                }
+            }
+        });
+    }, observerOptions);
+
     // Observer para seção do parceiro
     const partnerObserver = new IntersectionObserver(function(entries) {
         entries.forEach(entry => {
@@ -100,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const historyText = document.querySelector('.historia-text');
     const galleryGrid = document.querySelector('.galeria-grid');
     const rulesGrid = document.querySelector('.regras-grid');
+    const uniformesContent = document.querySelector('.uniformes-content');
     const partnerContent = document.querySelector('.parceiro-content');
     
     // Definir estados iniciais
@@ -134,6 +180,35 @@ document.addEventListener('DOMContentLoaded', function() {
             rule.style.transform = index % 2 === 0 ? 'translateX(-30px)' : 'translateX(30px)';
         });
         rulesObserver.observe(rulesGrid);
+    }
+
+    if (uniformesContent) {
+        const img = uniformesContent.querySelector('.uniformes-img');
+        const text = uniformesContent.querySelector('.uniformes-text');
+        const features = uniformesContent.querySelectorAll('.uniformes-features .feature');
+        const solicitar = uniformesContent.querySelector('.uniformes-solicitar');
+        
+        if (img) {
+            img.style.opacity = '0';
+            img.style.transform = 'translateX(-30px)';
+        }
+        
+        if (text) {
+            text.style.opacity = '0';
+            text.style.transform = 'translateX(30px)';
+        }
+        
+        features.forEach(feature => {
+            feature.style.opacity = '0';
+            feature.style.transform = 'translateY(20px)';
+        });
+        
+        if (solicitar) {
+            solicitar.style.opacity = '0';
+            solicitar.style.transform = 'translateY(20px)';
+        }
+        
+        uniformesObserver.observe(uniformesContent);
     }
 
     if (partnerContent) {
