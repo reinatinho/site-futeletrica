@@ -123,19 +123,7 @@ body {
     position: relative;
 }
 
-.hero-logo-img {
-    width: 150px;
-    height: 150px;
-    margin-bottom: 2rem;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
-    animation: heroFloat 4s ease-in-out infinite;
-}
 
-.hero-logo-img:hover {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6));
-}
 
 @keyframes heroFloat {
     0%, 100% { 
