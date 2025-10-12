@@ -11,9 +11,9 @@ services:
     container_name: site-futeletrica
     environment:
       - ALLOWED_HOSTS=futeletrica.com.br,www.futeletrica.com.br
-      - VIRTUAL_HOST=futeletrica.com.br
+      - VIRTUAL_HOST=futeletrica.com.br,www.futeletrica.com.br
       - VIRTUAL_PORT=8000
-      - LETSENCRYPT_HOST=futeletrica.com.br
+      - LETSENCRYPT_HOST=futeletrica.com.br,www.futeletrica.com.br
       - LETSENCRYPT_EMAIL=futeletrica2013@gmail.com
 
 networks:
