@@ -102,6 +102,7 @@ body {
     background: var(--black);
     position: relative;
     overflow: hidden;
+    z-index: 1;
 }
 
 .hero::before {
@@ -122,19 +123,7 @@ body {
     position: relative;
 }
 
-.hero-logo-img {
-    width: 150px;
-    height: 150px;
-    margin-bottom: 2rem;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
-    animation: heroFloat 4s ease-in-out infinite;
-}
 
-.hero-logo-img:hover {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6));
-}
 
 @keyframes heroFloat {
     0%, 100% { 
@@ -226,10 +215,13 @@ body {
 
 /* Seções */
 .section {
-    padding: 100px 0;
+    padding: 120px 0 100px 0;
     position: relative;
     overflow: hidden;
+    z-index: 1;
+    background-color: var(--black);
     transition: all 0.3s ease;
+    margin-bottom: 0;
 }
 
 .section::before {
@@ -241,6 +233,7 @@ body {
     height: 1px;
     background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.3) 50%, transparent 100%);
     opacity: 0.5;
+    z-index: -1;
 }
 
 .section:first-of-type::before {
@@ -252,7 +245,7 @@ body {
 }
 
 .section:hover {
-    transform: translateY(-2px);
+    transform: none;
 }
 
 .container {
@@ -274,6 +267,7 @@ body {
     color: var(--primary-yellow);
     position: relative;
     transition: all 0.3s ease;
+    scroll-margin-top: 100px;
 }
 
 .section-title:hover {
@@ -301,11 +295,17 @@ body {
 /* História */
 .historia {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 50%, rgba(255, 215, 0, 0.05) 100%);
+    z-index: 2;
+    position: relative;
+    margin-top: 0;
+    padding-top: 80px;
 }
 
 .historia-text {
     margin: 0 auto;
     max-width: 800px;
+    position: relative;
+    z-index: 3;
 }
 
 .historia-text p {
@@ -315,11 +315,15 @@ body {
     color: var(--white);
     opacity: 0.9;
     text-align: justify;
+    transform: translateY(0);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 /* Galeria */
 .galeria {
     background: var(--black);
+    z-index: 3;
+    position: relative;
 }
 
 .galeria-grid {
@@ -376,6 +380,8 @@ body {
 /* Regras */
 .regras {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.03) 0%, transparent 50%, rgba(255, 215, 0, 0.03) 100%);
+    z-index: 4;
+    position: relative;
 }
 
 .regras-grid {
@@ -422,9 +428,128 @@ body {
     line-height: 1.6;
 }
 
+/* Uniformes */
+.uniformes {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.06) 0%, transparent 50%, rgba(255, 215, 0, 0.06) 100%);
+    z-index: 5;
+    position: relative;
+}
+
+.uniformes-content {
+    display: flex;
+    justify-content: center;
+}
+
+.uniformes-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    max-width: 1000px;
+    width: 100%;
+}
+
+.uniformes-image {
+    text-align: center;
+}
+
+.uniformes-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(255, 215, 0, 0.25);
+    transition: var(--transition);
+}
+
+.uniformes-img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px rgba(255, 215, 0, 0.35);
+}
+
+.uniformes-text {
+    color: var(--white);
+}
+
+.uniformes-text p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    text-align: justify;
+}
+
+.uniformes-features {
+    display: flex;
+    gap: 1.5rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.uniformes-features .feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-yellow);
+    padding: 1rem;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 10px;
+    transition: var(--transition);
+    flex: 1;
+    min-width: 120px;
+}
+
+.uniformes-features .feature:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-3px);
+}
+
+.uniformes-features .feature i {
+    font-size: 1.8rem;
+}
+
+.uniformes-solicitar {
+    background: linear-gradient(135deg, rgba(51, 51, 51, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%);
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    border: 2px solid var(--primary-yellow);
+    backdrop-filter: blur(10px);
+    margin-top: 2rem;
+}
+
+.solicitar-text {
+    font-size: 1.1rem;
+    color: var(--primary-yellow);
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+}
+
+.btn-uniforme {
+    background: linear-gradient(135deg, var(--primary-yellow), var(--secondary-yellow));
+    color: var(--black);
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.btn-uniforme:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+    background: linear-gradient(135deg, var(--secondary-yellow), var(--primary-yellow));
+}
+
 /* Parceiro */
 .parceiro {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, transparent 50%, rgba(255, 215, 0, 0.08) 100%);
+    z-index: 6;
+    position: relative;
 }
 
 .parceiro-content {
@@ -575,6 +700,8 @@ body {
 .cta {
     background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--secondary-yellow) 100%);
     color: var(--black);
+    z-index: 7;
+    position: relative;
 }
 
 .cta-content {
@@ -810,6 +937,27 @@ body {
     .chinelinho-logo {
         max-width: 120px;
     }
+    
+    .uniformes-info {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+    }
+    
+    .uniformes-features {
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .uniformes-features .feature {
+        min-width: 100px;
+        padding: 0.8rem;
+    }
+    
+    .uniformes-solicitar {
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -913,45 +1061,32 @@ body {
     }
 }
 
-.section {
-    animation: fadeInUp 0.8s ease-out;
+/* Remoção das animações CSS automáticas para evitar conflitos
+   As animações serão controladas via JavaScript */
+
+/* Garantir que não há sobreposição de conteúdo */
+main {
+    position: relative;
+    z-index: 1;
+    background-color: var(--black);
 }
 
-/* Adicionar animação staggered aos itens da galeria */
-.galeria-item {
-    opacity: 0;
-    transform: translateY(30px);
+/* Melhorar transições suaves entre seções */
+.section + .section {
+    border-top: 1px solid rgba(255, 215, 0, 0.1);
+    margin-top: 0;
 }
 
-.galeria-item:nth-child(1) {
-    animation: fadeInUp 0.8s ease-out 0.6s both;
-}
-
-.galeria-item:nth-child(2) {
-    animation: fadeInUp 0.8s ease-out 0.7s both;
-}
-
-.galeria-item:nth-child(3) {
-    animation: fadeInUp 0.8s ease-out 0.8s both;
-}
-
-.galeria-item:nth-child(4) {
-    animation: fadeInUp 0.8s ease-out 0.9s both;
-}
-
-/* Animação staggered para regras */
-.regra-item {
-    opacity: 0;
-    transform: translateX(-30px);
-}
-
-.regra-item:nth-child(odd) {
-    animation: slideInLeft 0.8s ease-out 0.8s both;
-}
-
-.regra-item:nth-child(even) {
-    transform: translateX(30px);
-    animation: slideInRight 0.8s ease-out 0.8s both;
+/* Garantir continuidade visual */
+.section::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--black);
+    z-index: 10;
 }
 
 /* Floating animation para features */

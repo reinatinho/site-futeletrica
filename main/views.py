@@ -38,6 +38,6 @@ def dashboard(request):
     """View para a página do dashboard com Power BI embeddado"""
     context = {
         'titulo': 'Dashboard - Futeletrica 2013',
-        'powerbi_url': 'https://app.powerbi.com/view?r=eyJrIjoiMzVmNWY0M2EtZjM5ZS00MzU0LThmMmItMmMwZmRkZmY0OTk3IiwidCI6IjE5OTljZTlmLWM3NGQtNDVhOC04MDU5LTMwZGY0NDk1YTk3MyJ9'
+        'powerbi_url': 'https://lookerstudio.google.com/embed/reporting/53e67754-5792-4797-a2d3-53598644d285/page/FCObF'
     }
     return render(request, 'main/dashboard.html', context)
