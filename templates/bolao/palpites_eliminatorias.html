@@ -1,5 +1,6 @@
 {% extends 'bolao/base_bolao.html' %}
 {% load static %}
+{% load bolao_filters %}
 
 {% block title %}Palpites Eliminatórias{% endblock %}
 
@@ -52,11 +53,11 @@
                 <div class="jogo-data">
                     Jogo {{ jogo.numero_jogo }} — {{ jogo.data_hora|date:"d/m H:i" }}
                 </div>
-                <div class="jogo-times">
-                    <div class="time-casa">
-                        <span class="bandeira">{{ jogo.selecao_casa.bandeira_emoji }}</span>
-                        <span class="time-nome">{{ jogo.selecao_casa.nome }}</span>
-                    </div>
+                    <div class="jogo-times">
+                        <div class="time-casa">
+                            <img src="{% static jogo.selecao_casa|flag_url %}" alt="{{ jogo.selecao_casa.codigo }}" class="bandeira-img">
+                            <span class="time-nome">{{ jogo.selecao_casa.nome }}</span>
+                        </div>
                     <div class="placar-inputs">
                         <input type="number" min="0" max="9" class="placar-input gols-casa"
                                data-jogo="{{ jogo.id }}" data-tipo="casa"
@@ -68,7 +69,7 @@
                     </div>
                     <div class="time-fora">
                         <span class="time-nome">{{ jogo.selecao_fora.nome }}</span>
-                        <span class="bandeira">{{ jogo.selecao_fora.bandeira_emoji }}</span>
+                        <img src="{% static jogo.selecao_fora|flag_url %}" alt="{{ jogo.selecao_fora.codigo }}" class="bandeira-img">
                     </div>
                 </div>
                 {% if jogo.resultado_definido %}

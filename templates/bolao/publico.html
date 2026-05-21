@@ -32,7 +32,7 @@
                     {% for jogo in grupo.jogos.all %}
                     {% with palpite=item.palpites %}
                     <div class="publico-jogo-row">
-                        <span class="publico-time">{{ jogo.selecao_casa.bandeira_emoji }} {{ jogo.selecao_casa.nome }}</span>
+                        <span class="publico-time"><img src="{% static jogo.selecao_casa|flag_url %}" alt="" class="bandeira-img-sm"> {{ jogo.selecao_casa.nome }}</span>
                         <span class="publico-placar">
                             {% if jogo.id in palpite %}
                             {{ palpite|get_item:jogo.id|get_nested:"casa" }} × {{ palpite|get_item:jogo.id|get_nested:"fora" }}
@@ -40,7 +40,7 @@
                             - × -
                             {% endif %}
                         </span>
-                        <span class="publico-time">{{ jogo.selecao_fora.nome }} {{ jogo.selecao_fora.bandeira_emoji }}</span>
+                        <span class="publico-time">{{ jogo.selecao_fora.nome }} <img src="{% static jogo.selecao_fora|flag_url %}" alt="" class="bandeira-img-sm"></span>
                         {% if jogo.resultado_definido and jogo.id in palpite %}
                         <span class="publico-pontos">
                             {% with pts=palpite|get_item:jogo.id|get_nested:"pontos" %}

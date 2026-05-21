@@ -1,5 +1,6 @@
 {% extends 'bolao/base_bolao.html' %}
 {% load static %}
+{% load bolao_filters %}
 
 {% block title %}Palpites{% endblock %}
 
@@ -46,7 +47,7 @@
                     </div>
                     <div class="jogo-times">
                         <div class="time-casa">
-                            <span class="bandeira">{{ jogo.selecao_casa.bandeira_emoji }}</span>
+                            <img src="{% static jogo.selecao_casa|flag_url %}" alt="{{ jogo.selecao_casa.codigo }}" class="bandeira-img">
                             <span class="time-nome">{{ jogo.selecao_casa.nome }}</span>
                         </div>
                         <div class="placar-inputs">
@@ -60,7 +61,7 @@
                         </div>
                         <div class="time-fora">
                             <span class="time-nome">{{ jogo.selecao_fora.nome }}</span>
-                            <span class="bandeira">{{ jogo.selecao_fora.bandeira_emoji }}</span>
+                            <img src="{% static jogo.selecao_fora|flag_url %}" alt="{{ jogo.selecao_fora.codigo }}" class="bandeira-img">
                         </div>
                     </div>
                     {% if jogo.resultado_definido %}
@@ -94,7 +95,7 @@
                         {% for selecao in grupo.selecoes.all %}
                         <tr data-selecao-id="{{ selecao.id }}">
                             <td class="pos">-</td>
-                            <td class="sel-nome">{{ selecao.bandeira_emoji }} {{ selecao.nome }}</td>
+                            <td class="sel-nome"><img src="{% static selecao|flag_url %}" alt="{{ selecao.codigo }}" class="bandeira-img-sm"> {{ selecao.nome }}</td>
                             <td class="pts">0</td>
                             <td class="vit">0</td>
                             <td class="emp">0</td>

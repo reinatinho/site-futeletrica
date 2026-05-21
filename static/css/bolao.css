@@ -573,6 +573,25 @@ body {
     line-height: 1;
 }
 
+.bandeira-img {
+    width: 28px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+
+.bandeira-img-sm {
+    width: 20px;
+    height: 14px;
+    object-fit: cover;
+    border-radius: 1px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
 .placar-inputs {
     display: flex;
     align-items: center;

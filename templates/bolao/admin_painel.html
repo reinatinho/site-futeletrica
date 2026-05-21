@@ -1,5 +1,6 @@
 {% extends 'bolao/base_bolao.html' %}
 {% load static %}
+{% load bolao_filters %}
 
 {% block title %}Admin — Bolão Copa 2026{% endblock %}
 
@@ -151,9 +152,9 @@
                     <div class="resultado-info">
                         <span class="resultado-data">{{ jogo.data_hora|date:"d/m H:i" }}</span>
                         <span class="resultado-times">
-                            {{ jogo.selecao_casa.bandeira_emoji }} {{ jogo.selecao_casa.nome }}
+                            <img src="{% static jogo.selecao_casa|flag_url %}" alt="" class="bandeira-img-sm"> {{ jogo.selecao_casa.nome }}
                             <span class="vs">vs</span>
-                            {{ jogo.selecao_fora.nome }} {{ jogo.selecao_fora.bandeira_emoji }}
+                            {{ jogo.selecao_fora.nome }} <img src="{% static jogo.selecao_fora|flag_url %}" alt="" class="bandeira-img-sm">
                         </span>
                     </div>
                     <div class="resultado-inputs">

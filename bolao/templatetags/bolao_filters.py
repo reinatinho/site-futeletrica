@@ -17,3 +17,11 @@ def get_nested(dictionary, key):
     if isinstance(dictionary, dict):
         return dictionary.get(key)
     return None
+
+
+@register.filter
+def flag_url(selecao):
+    """Retorna o path da bandeira PNG de uma seleção."""
+    if hasattr(selecao, 'codigo'):
+        return f"images/flags/{selecao.codigo.lower()}.png"
+    return ""
