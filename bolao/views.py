@@ -361,6 +361,175 @@ def admin_salvar_config(request):
     return JsonResponse({'success': True, 'message': 'Configurações atualizadas!'})
 
 
+def palpites_eliminatorias_view(request):
+    """Palpites das fases eliminatórias."""
+    participante = get_participante(request)
+    if not participante:
+        return redirect('bolao:login')
+
+    config = ConfigBolao.get_config()
+
+    fases_disponiveis = []
+    fase_map = [
+        ('16avos', config.fase_16avos_aberta, '16-avos de Final'),
+        ('oitavas', config.fase_oitavas_aberta, 'Oitavas de Final'),
+        ('quartas', config.fase_quartas_aberta, 'Quartas de Final'),
+        ('semi', config.fase_semi_aberta, 'Semifinais'),
+        ('terceiro', config.fase_terceiro_aberta, 'Disputa 3º Lugar'),
+        ('final', config.fase_final_aberta, 'Final'),
+    ]
+
+    for fase_cod, aberta, fase_nome in fase_map:
+        jogos = Jogo.objects.filter(fase=fase_cod, selecao_casa__isnull=False, selecao_fora__isnull=False).select_related(
+            'selecao_casa', 'selecao_fora'
+        )
+        if jogos.exists():
+            fases_disponiveis.append({
+                'codigo': fase_cod,
+                'nome': fase_nome,
+                'aberta': aberta,
+                'jogos': jogos,
+            })
+
+    palpites_existentes = {}
+    for p in Palpite.objects.filter(participante=participante, jogo__fase__in=['16avos', 'oitavas', 'quartas', 'semi', 'terceiro', 'final']):
+        palpites_existentes[p.jogo_id] = {
+            'gols_casa': p.gols_casa,
+            'gols_fora': p.gols_fora,
+            'pontos': p.pontos,
+        }
+
+    return render(request, 'bolao/palpites_eliminatorias.html', {
+        'participante': participante,
+        'fases_disponiveis': fases_disponiveis,
+        'palpites_existentes': json.dumps(palpites_existentes),
+        'config': config,
+    })
+
+
+@require_POST
+def salvar_palpites_eliminatorias(request):
+    """Salvar palpites das fases eliminatórias."""
+    participante = get_participante(request)
+    if not participante:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+
+    config = ConfigBolao.get_config()
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    palpites_data = data.get('palpites', {})
+
+    fase_aberta_map = {
+        '16avos': config.fase_16avos_aberta,
+        'oitavas': config.fase_oitavas_aberta,
+        'quartas': config.fase_quartas_aberta,
+        'semi': config.fase_semi_aberta,
+        'terceiro': config.fase_terceiro_aberta,
+        'final': config.fase_final_aberta,
+    }
+
+    for jogo_id_str, valores in palpites_data.items():
+        jogo_id = int(jogo_id_str)
+        gols_casa = valores.get('gols_casa')
+        gols_fora = valores.get('gols_fora')
+
+        if gols_casa is not None and gols_fora is not None:
+            try:
+                jogo = Jogo.objects.get(id=jogo_id)
+            except Jogo.DoesNotExist:
+                continue
+
+            if not fase_aberta_map.get(jogo.fase, False):
+                continue
+
+            if not jogo.equipes_definidas:
+                continue
+
+            Palpite.objects.update_or_create(
+                participante=participante,
+                jogo_id=jogo_id,
+                defaults={
+                    'gols_casa': int(gols_casa),
+                    'gols_fora': int(gols_fora),
+                }
+            )
+
+    return JsonResponse({'success': True, 'message': 'Palpites salvos com sucesso!'})
+
+
+@admin_required
+@require_POST
+def admin_definir_equipes(request):
+    """Admin define as equipes de um jogo eliminatório."""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    jogo_id = data.get('jogo_id')
+    selecao_casa_id = data.get('selecao_casa_id')
+    selecao_fora_id = data.get('selecao_fora_id')
+
+    if not jogo_id:
+        return JsonResponse({'error': 'ID do jogo obrigatório'}, status=400)
+
+    try:
+        jogo = Jogo.objects.get(id=jogo_id)
+    except Jogo.DoesNotExist:
+        return JsonResponse({'error': 'Jogo não encontrado'}, status=404)
+
+    if jogo.fase == 'grupos':
+        return JsonResponse({'error': 'Não é possível alterar jogos da fase de grupos'}, status=400)
+
+    if selecao_casa_id:
+        jogo.selecao_casa_id = int(selecao_casa_id)
+    else:
+        jogo.selecao_casa = None
+
+    if selecao_fora_id:
+        jogo.selecao_fora_id = int(selecao_fora_id)
+    else:
+        jogo.selecao_fora = None
+
+    jogo.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Equipes definidas para Jogo {jogo.numero_jogo}',
+    })
+
+
+@admin_required
+def admin_eliminatorias_view(request):
+    """Admin: gerenciar jogos eliminatórios."""
+    config = ConfigBolao.get_config()
+    selecoes = Selecao.objects.all().order_by('nome')
+
+    fases = []
+    for fase_cod, fase_nome in Jogo.FASE_CHOICES:
+        if fase_cod == 'grupos':
+            continue
+        jogos = Jogo.objects.filter(fase=fase_cod).select_related('selecao_casa', 'selecao_fora')
+        if jogos.exists():
+            fases.append({
+                'codigo': fase_cod,
+                'nome': fase_nome,
+                'jogos': jogos,
+            })
+
+    todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji').order_by('nome'))
+
+    return render(request, 'bolao/admin_eliminatorias.html', {
+        'config': config,
+        'fases': fases,
+        'todas_selecoes': json.dumps(todas_selecoes),
+    })
+
+
 @admin_required
 def admin_logout_view(request):
     request.session.pop('bolao_admin', None)

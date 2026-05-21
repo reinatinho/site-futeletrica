@@ -49,6 +49,12 @@
             <span>Participar</span>
         </a>
         {% endif %}
+        {% if participante %}
+        <a href="{% url 'bolao:palpites_eliminatorias' %}" class="nav-card">
+            <i class="fas fa-sitemap"></i>
+            <span>Eliminatórias</span>
+        </a>
+        {% endif %}
         {% if config.palpites_publicos %}
         <a href="{% url 'bolao:publico' %}" class="nav-card">
             <i class="fas fa-users"></i>

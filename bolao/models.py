@@ -53,12 +53,24 @@ class Selecao(models.Model):
 
 
 class Jogo(models.Model):
-    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='jogos')
-    selecao_casa = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='jogos_casa')
-    selecao_fora = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='jogos_fora')
+    FASE_CHOICES = [
+        ('grupos', 'Fase de Grupos'),
+        ('16avos', '16-avos de Final'),
+        ('oitavas', 'Oitavas de Final'),
+        ('quartas', 'Quartas de Final'),
+        ('semi', 'Semifinais'),
+        ('terceiro', 'Disputa 3º Lugar'),
+        ('final', 'Final'),
+    ]
+
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='jogos', null=True, blank=True)
+    selecao_casa = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='jogos_casa', null=True, blank=True)
+    selecao_fora = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='jogos_fora', null=True, blank=True)
     data_hora = models.DateTimeField()
     rodada = models.PositiveSmallIntegerField(default=1)
-    fase = models.CharField(max_length=20, default='grupos')
+    fase = models.CharField(max_length=20, choices=FASE_CHOICES, default='grupos')
+    numero_jogo = models.PositiveSmallIntegerField(null=True, blank=True, unique=True)
+    descricao = models.CharField(max_length=120, blank=True)
 
     gols_casa = models.PositiveSmallIntegerField(null=True, blank=True)
     gols_fora = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -68,11 +80,17 @@ class Jogo(models.Model):
         verbose_name = 'Jogo'
 
     def __str__(self):
-        return f"{self.selecao_casa} x {self.selecao_fora} ({self.data_hora.strftime('%d/%m')})"
+        if self.selecao_casa and self.selecao_fora:
+            return f"{self.selecao_casa} x {self.selecao_fora} ({self.data_hora.strftime('%d/%m')})"
+        return f"Jogo {self.numero_jogo or '?'}: {self.descricao}"
 
     @property
     def resultado_definido(self):
         return self.gols_casa is not None and self.gols_fora is not None
+
+    @property
+    def equipes_definidas(self):
+        return self.selecao_casa is not None and self.selecao_fora is not None
 
 
 class Palpite(models.Model):
