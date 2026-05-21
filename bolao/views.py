@@ -108,7 +108,7 @@ def palpites_view(request):
     for pe in PalpiteExtra.objects.filter(participante=participante):
         extras_existentes[pe.tipo] = pe.selecao_id
 
-    todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji', 'grupo_id'))
+    todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji', 'codigo', 'grupo_id'))
 
     return render(request, 'bolao/palpites.html', {
         'participante': participante,

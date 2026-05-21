@@ -45,15 +45,76 @@ function initPalpites() {
 
 function initExtrasSelects() {
     const selects = document.querySelectorAll('.extra-select');
+    const sorted = [...TODAS_SELECOES].sort((a, b) => a.nome.localeCompare(b.nome));
     selects.forEach(select => {
-        TODAS_SELECOES.sort((a, b) => a.nome.localeCompare(b.nome));
-        TODAS_SELECOES.forEach(sel => {
+        sorted.forEach(sel => {
             const option = document.createElement('option');
             option.value = sel.id;
-            option.textContent = `${sel.bandeira_emoji} ${sel.nome}`;
+            option.textContent = sel.nome;
+            option.dataset.codigo = sel.codigo ? sel.codigo.toLowerCase() : '';
             select.appendChild(option);
         });
+
+        // Wrap select in custom dropdown with flag images
+        wrapSelectWithFlags(select);
     });
+}
+
+function wrapSelectWithFlags(select) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+
+    const display = document.createElement('div');
+    display.className = 'custom-select-display';
+    display.innerHTML = '<span class="csd-placeholder">Selecione...</span>';
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown';
+
+    const sorted = [...TODAS_SELECOES].sort((a, b) => a.nome.localeCompare(b.nome));
+    sorted.forEach(sel => {
+        const item = document.createElement('div');
+        item.className = 'custom-select-item';
+        item.dataset.value = sel.id;
+        const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
+        item.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+        item.addEventListener('click', () => {
+            select.value = sel.id;
+            select.dispatchEvent(new Event('change'));
+            display.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+            dropdown.classList.remove('open');
+            wrapper.classList.remove('open');
+        });
+        dropdown.appendChild(item);
+    });
+
+    display.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+            if (w !== wrapper) { w.classList.remove('open'); w.querySelector('.custom-select-dropdown').classList.remove('open'); }
+        });
+        dropdown.classList.toggle('open');
+        wrapper.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+        dropdown.classList.remove('open');
+        wrapper.classList.remove('open');
+    });
+
+    select.style.display = 'none';
+    select.parentElement.appendChild(wrapper);
+    wrapper.appendChild(display);
+    wrapper.appendChild(dropdown);
+
+    // If already has a value, show it
+    if (select.value) {
+        const sel = sorted.find(s => s.id == select.value);
+        if (sel) {
+            const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
+            display.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+        }
+    }
 }
 
 function loadExistingData() {
@@ -79,6 +140,16 @@ function loadExistingData() {
         const select = document.querySelector(`.extra-select[data-tipo="${tipo}"]`);
         if (select && selecaoId) {
             select.value = selecaoId;
+            // Update custom dropdown display
+            const wrapper = select.parentElement.querySelector('.custom-select-wrapper');
+            if (wrapper) {
+                const display = wrapper.querySelector('.custom-select-display');
+                const sel = TODAS_SELECOES.find(s => s.id == selecaoId);
+                if (sel && display) {
+                    const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
+                    display.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+                }
+            }
         }
     }
 
