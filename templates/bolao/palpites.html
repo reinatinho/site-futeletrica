@@ -153,9 +153,19 @@
             <i class="fas fa-exclamation-triangle"></i>
             <span id="validacao-texto"></span>
         </div>
-        <button class="btn btn-primary btn-lg" id="btn-salvar">
-            <i class="fas fa-save"></i> Salvar Palpites
-        </button>
+        <p class="rascunho-info" id="rascunho-info" style="display:none;"></p>
+        <div class="salvar-buttons">
+            <button class="btn btn-outline btn-lg" id="btn-rascunho">
+                <i class="fas fa-save"></i> Salvar Rascunho
+            </button>
+            <button class="btn btn-primary btn-lg" id="btn-enviar">
+                <i class="fas fa-paper-plane"></i> Enviar Palpites
+            </button>
+        </div>
+        <p class="salvar-hint">
+            <strong>Salvar Rascunho:</strong> guarda no seu navegador para continuar depois.<br>
+            <strong>Enviar Palpites:</strong> salva definitivamente no servidor (precisa estar tudo preenchido).
+        </p>
     </div>
     {% endif %}
 </div>

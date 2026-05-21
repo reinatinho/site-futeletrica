@@ -307,51 +307,161 @@ function updateGrupoStatus(grupoLetra) {
 }
 
 function initSalvar() {
-    const btn = document.getElementById('btn-salvar');
-    if (!btn) return;
+    const btnRascunho = document.getElementById('btn-rascunho');
+    const btnEnviar = document.getElementById('btn-enviar');
 
-    btn.addEventListener('click', async function() {
-        const validation = validateAll();
-        const avisoEl = document.getElementById('validacao-aviso');
-        const textoEl = document.getElementById('validacao-texto');
+    // Carregar rascunho local ao iniciar (se não tem dados do servidor)
+    loadRascunho();
 
-        if (!validation.valid) {
-            avisoEl.style.display = 'block';
-            textoEl.textContent = validation.message;
-            avisoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
+    if (btnRascunho) {
+        btnRascunho.addEventListener('click', function() {
+            salvarRascunhoLocal();
+            showToast('Rascunho salvo no seu navegador!', 'success');
+        });
+    }
 
-        avisoEl.style.display = 'none';
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    if (btnEnviar) {
+        btnEnviar.addEventListener('click', async function() {
+            const validation = validateAll();
+            const avisoEl = document.getElementById('validacao-aviso');
+            const textoEl = document.getElementById('validacao-texto');
 
-        const data = collectData();
-
-        try {
-            const response = await fetch(SALVAR_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': CSRF_TOKEN,
-                },
-                body: JSON.stringify(data),
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                showToast('Palpites salvos com sucesso!', 'success');
-            } else {
-                showToast(result.error || 'Erro ao salvar', 'error');
+            if (!validation.valid) {
+                avisoEl.style.display = 'block';
+                textoEl.textContent = validation.message;
+                avisoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
             }
-        } catch (err) {
-            showToast('Erro de conexão. Tente novamente.', 'error');
-        }
 
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Salvar Palpites';
+            avisoEl.style.display = 'none';
+            btnEnviar.disabled = true;
+            btnEnviar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            const data = collectData();
+
+            try {
+                const response = await fetch(SALVAR_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN,
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast('Palpites enviados com sucesso!', 'success');
+                    limparRascunhoLocal();
+                } else {
+                    showToast(result.error || 'Erro ao enviar', 'error');
+                }
+            } catch (err) {
+                showToast('Erro de conexão. Tente novamente.', 'error');
+            }
+
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Palpites';
+        });
+    }
+}
+
+function salvarRascunhoLocal() {
+    const data = collectDataParcial();
+    localStorage.setItem('bolao_rascunho', JSON.stringify(data));
+    localStorage.setItem('bolao_rascunho_data', new Date().toLocaleString('pt-BR'));
+    updateRascunhoInfo();
+}
+
+function loadRascunho() {
+    const saved = localStorage.getItem('bolao_rascunho');
+    if (!saved) return;
+
+    // Só carrega rascunho se não tem dados do servidor
+    const temDadosServidor = Object.keys(PALPITES_EXISTENTES).length > 0;
+    if (temDadosServidor) return;
+
+    try {
+        const data = JSON.parse(saved);
+        if (data.palpites) {
+            for (const [jogoId, valores] of Object.entries(data.palpites)) {
+                const row = document.querySelector(`.jogo-row[data-jogo-id="${jogoId}"]`);
+                if (row) {
+                    const casaInput = row.querySelector('.gols-casa');
+                    const foraInput = row.querySelector('.gols-fora');
+                    if (valores.gols_casa !== undefined && casaInput) {
+                        casaInput.value = valores.gols_casa;
+                        casaInput.classList.add('filled');
+                    }
+                    if (valores.gols_fora !== undefined && foraInput) {
+                        foraInput.value = valores.gols_fora;
+                        foraInput.classList.add('filled');
+                    }
+                }
+            }
+        }
+        if (data.extras) {
+            for (const [tipo, selecaoId] of Object.entries(data.extras)) {
+                const select = document.querySelector(`.extra-select[data-tipo="${tipo}"]`);
+                if (select && selecaoId) {
+                    select.value = selecaoId;
+                    const wrapper = select.parentElement.querySelector('.custom-select-wrapper');
+                    if (wrapper) {
+                        const display = wrapper.querySelector('.custom-select-display');
+                        const sel = TODAS_SELECOES.find(s => s.id == selecaoId);
+                        if (sel && display) {
+                            const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
+                            display.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+                        }
+                    }
+                }
+            }
+        }
+        updateRascunhoInfo();
+    } catch (e) {}
+}
+
+function collectDataParcial() {
+    const palpites = {};
+    const extras = {};
+
+    document.querySelectorAll('.jogo-row').forEach(row => {
+        const jogoId = row.dataset.jogoId;
+        const casa = row.querySelector('.gols-casa');
+        const fora = row.querySelector('.gols-fora');
+        if (casa && fora && (casa.value !== '' || fora.value !== '')) {
+            palpites[jogoId] = {};
+            if (casa.value !== '') palpites[jogoId].gols_casa = parseInt(casa.value);
+            if (fora.value !== '') palpites[jogoId].gols_fora = parseInt(fora.value);
+        }
     });
+
+    document.querySelectorAll('.extra-select').forEach(select => {
+        if (select.value) {
+            extras[select.dataset.tipo] = parseInt(select.value);
+        }
+    });
+
+    return { palpites, extras };
+}
+
+function limparRascunhoLocal() {
+    localStorage.removeItem('bolao_rascunho');
+    localStorage.removeItem('bolao_rascunho_data');
+    updateRascunhoInfo();
+}
+
+function updateRascunhoInfo() {
+    const infoEl = document.getElementById('rascunho-info');
+    if (!infoEl) return;
+    const dataStr = localStorage.getItem('bolao_rascunho_data');
+    if (dataStr) {
+        infoEl.style.display = 'block';
+        infoEl.textContent = `Rascunho local salvo em: ${dataStr}`;
+    } else {
+        infoEl.style.display = 'none';
+    }
 }
 
 function validateAll() {
