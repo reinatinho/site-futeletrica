@@ -1,0 +1,32 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+
+{% block title %}Admin — Bolão{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <h2>Painel Administrativo</h2>
+            <p class="login-subtitle">Acesso restrito</p>
+        </div>
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="admin-pin"><i class="fas fa-key"></i> PIN do Admin</label>
+                <input type="password" name="pin" id="admin-pin" class="form-input"
+                       placeholder="Digite o PIN" inputmode="numeric" maxlength="10" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-unlock"></i> Acessar
+            </button>
+        </form>
+        <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="{% url 'bolao:home' %}" class="btn btn-sm btn-outline">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

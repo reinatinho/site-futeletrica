@@ -1,0 +1,115 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+
+{% block title %}Bolão Copa 2026{% endblock %}
+
+{% block header_nav %}
+<div class="nav-links">
+    {% if participante %}
+    <a href="{% url 'bolao:palpites' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-futbol"></i> Meus Palpites
+    </a>
+    <a href="{% url 'bolao:logout' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-sign-out-alt"></i> Sair
+    </a>
+    {% else %}
+    <a href="{% url 'bolao:login' %}" class="btn btn-sm btn-primary">
+        <i class="fas fa-sign-in-alt"></i> Entrar
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <div class="home-hero">
+        <h2><i class="fas fa-trophy"></i> Bolão Copa do Mundo 2026</h2>
+        <p class="hero-subtitle">Classificação Geral</p>
+        <div class="hero-stats">
+            <div class="stat-card">
+                <span class="stat-value">{{ classificacao|length }}</span>
+                <span class="stat-label">Participantes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ jogos_com_resultado }}/{{ total_jogos }}</span>
+                <span class="stat-label">Jogos Realizados</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        {% if participante %}
+        <a href="{% url 'bolao:palpites' %}" class="nav-card">
+            <i class="fas fa-edit"></i>
+            <span>Meus Palpites</span>
+        </a>
+        {% else %}
+        <a href="{% url 'bolao:login' %}" class="nav-card">
+            <i class="fas fa-user-plus"></i>
+            <span>Participar</span>
+        </a>
+        {% endif %}
+        {% if config.palpites_publicos %}
+        <a href="{% url 'bolao:publico' %}" class="nav-card">
+            <i class="fas fa-users"></i>
+            <span>Palpites Públicos</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'bolao:admin_login' %}" class="nav-card nav-card-admin">
+            <i class="fas fa-cog"></i>
+            <span>Admin</span>
+        </a>
+    </div>
+
+    {% if classificacao %}
+    <div class="classificacao-section">
+        <h3><i class="fas fa-medal"></i> Classificação Geral</h3>
+        <div class="classificacao-table-wrapper">
+            <table class="classificacao-geral">
+                <thead>
+                    <tr>
+                        <th class="col-pos">#</th>
+                        <th class="col-nome">Participante</th>
+                        <th class="col-pts">Total</th>
+                        <th class="col-det">Jogos</th>
+                        <th class="col-det">Classif.</th>
+                        <th class="col-det">Extras</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in classificacao %}
+                    <tr class="{% if item.posicao == 1 %}row-primeiro{% elif item.posicao == 2 %}row-segundo{% elif item.posicao == 3 %}row-terceiro{% endif %}">
+                        <td class="col-pos">
+                            {% if item.posicao == 1 %}
+                            <span class="medal gold">🥇</span>
+                            {% elif item.posicao == 2 %}
+                            <span class="medal silver">🥈</span>
+                            {% elif item.posicao == 3 %}
+                            <span class="medal bronze">🥉</span>
+                            {% else %}
+                            {{ item.posicao }}º
+                            {% endif %}
+                        </td>
+                        <td class="col-nome">{{ item.participante.nome_completo }}</td>
+                        <td class="col-pts"><strong>{{ item.pontos_total }}</strong></td>
+                        <td class="col-det">{{ item.pontos_jogos }}</td>
+                        <td class="col-det">{{ item.pontos_classificacao }}</td>
+                        <td class="col-det">{{ item.pontos_extras }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-futbol"></i>
+        <h3>Nenhum participante ainda</h3>
+        <p>Seja o primeiro a se cadastrar e fazer seus palpites!</p>
+        <a href="{% url 'bolao:login' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Participar Agora
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

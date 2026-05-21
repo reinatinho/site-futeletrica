@@ -1,0 +1,243 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+
+{% block title %}Admin — Bolão Copa 2026{% endblock %}
+
+{% block header_nav %}
+<div class="nav-links">
+    <a href="{% url 'bolao:home' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <a href="{% url 'bolao:admin_logout' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-sign-out-alt"></i> Sair Admin
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h2 class="admin-title"><i class="fas fa-cog"></i> Painel Administrativo</h2>
+
+    <!-- Resumo -->
+    <div class="admin-stats">
+        <div class="stat-card">
+            <span class="stat-value">{{ total_participantes }}</span>
+            <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-card stat-success">
+            <span class="stat-value">{{ completos }}</span>
+            <span class="stat-label">Completos</span>
+        </div>
+        <div class="stat-card stat-warning">
+            <span class="stat-value">{{ pendentes }}</span>
+            <span class="stat-label">Pendentes</span>
+        </div>
+    </div>
+
+    <!-- Configurações / Flags -->
+    <div class="admin-section">
+        <h3><i class="fas fa-sliders-h"></i> Configurações</h3>
+        <div class="config-grid">
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_grupos_aberta"
+                       {% if config.fase_grupos_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Fase de Grupos Aberta</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_16avos_aberta"
+                       {% if config.fase_16avos_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">16-avos de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_oitavas_aberta"
+                       {% if config.fase_oitavas_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Oitavas de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_quartas_aberta"
+                       {% if config.fase_quartas_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Quartas de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_semi_aberta"
+                       {% if config.fase_semi_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Semifinais</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_terceiro_aberta"
+                       {% if config.fase_terceiro_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Disputa 3º Lugar</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="fase_final_aberta"
+                       {% if config.fase_final_aberta %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="palpites_publicos"
+                       {% if config.palpites_publicos %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Palpites Públicos</span>
+            </label>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-salvar-config" style="margin-top: 1rem;">
+            <i class="fas fa-save"></i> Salvar Configurações
+        </button>
+    </div>
+
+    <!-- Participantes -->
+    <div class="admin-section">
+        <h3><i class="fas fa-users"></i> Participantes</h3>
+        <div class="participantes-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Usuário</th>
+                        <th>Palpites</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in participantes_status %}
+                    <tr>
+                        <td>{{ item.participante.nome_completo }}</td>
+                        <td class="text-muted">{{ item.participante.username }}</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ item.percentual }}%"></div>
+                            </div>
+                            <span class="progress-text">{{ item.palpites_feitos }}/{{ item.total_esperado }}</span>
+                        </td>
+                        <td>
+                            {% if item.completo %}
+                            <span class="badge badge-success"><i class="fas fa-check"></i> Completo</span>
+                            {% else %}
+                            <span class="badge badge-warning"><i class="fas fa-clock"></i> Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="admin-section">
+        <h3><i class="fas fa-futbol"></i> Inserir Resultados</h3>
+        <p class="section-desc">Insira os resultados oficiais dos jogos para calcular a pontuação.</p>
+
+        {% for grupo in grupos %}
+        <div class="resultado-grupo">
+            <h4 class="resultado-grupo-titulo">Grupo {{ grupo.letra }}</h4>
+            <div class="resultados-list">
+                {% for jogo in grupo.jogos.all %}
+                <div class="resultado-row" data-jogo-id="{{ jogo.id }}">
+                    <div class="resultado-info">
+                        <span class="resultado-data">{{ jogo.data_hora|date:"d/m H:i" }}</span>
+                        <span class="resultado-times">
+                            {{ jogo.selecao_casa.bandeira_emoji }} {{ jogo.selecao_casa.nome }}
+                            <span class="vs">vs</span>
+                            {{ jogo.selecao_fora.nome }} {{ jogo.selecao_fora.bandeira_emoji }}
+                        </span>
+                    </div>
+                    <div class="resultado-inputs">
+                        <input type="number" min="0" max="20" class="resultado-input resultado-casa"
+                               value="{% if jogo.gols_casa is not None %}{{ jogo.gols_casa }}{% endif %}"
+                               placeholder="-">
+                        <span class="resultado-x">×</span>
+                        <input type="number" min="0" max="20" class="resultado-input resultado-fora"
+                               value="{% if jogo.gols_fora is not None %}{{ jogo.gols_fora }}{% endif %}"
+                               placeholder="-">
+                        <button class="btn btn-sm btn-primary btn-salvar-resultado" data-jogo-id="{{ jogo.id }}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+const SALVAR_CONFIG_URL = '{% url "bolao:admin_salvar_config" %}';
+const SALVAR_RESULTADO_URL = '{% url "bolao:admin_salvar_resultado" %}';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Salvar config
+    document.getElementById('btn-salvar-config').addEventListener('click', async function() {
+        const checks = document.querySelectorAll('.config-check');
+        const data = {};
+        checks.forEach(c => { data[c.dataset.campo] = c.checked; });
+
+        try {
+            const resp = await fetch(SALVAR_CONFIG_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                body: JSON.stringify(data),
+            });
+            const result = await resp.json();
+            showToast(result.message || 'Salvo!', resp.ok ? 'success' : 'error');
+        } catch (e) {
+            showToast('Erro de conexão', 'error');
+        }
+    });
+
+    // Salvar resultados
+    document.querySelectorAll('.btn-salvar-resultado').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const jogoId = this.dataset.jogoId;
+            const row = this.closest('.resultado-row');
+            const casa = row.querySelector('.resultado-casa').value;
+            const fora = row.querySelector('.resultado-fora').value;
+
+            if (casa === '' || fora === '') {
+                showToast('Preencha ambos os placares', 'error');
+                return;
+            }
+
+            try {
+                const resp = await fetch(SALVAR_RESULTADO_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                    body: JSON.stringify({ jogo_id: parseInt(jogoId), gols_casa: parseInt(casa), gols_fora: parseInt(fora) }),
+                });
+                const result = await resp.json();
+                if (resp.ok) {
+                    showToast(result.message, 'success');
+                    this.innerHTML = '<i class="fas fa-check-double"></i>';
+                    this.style.background = 'var(--success)';
+                } else {
+                    showToast(result.error, 'error');
+                }
+            } catch (e) {
+                showToast('Erro de conexão', 'error');
+            }
+        });
+    });
+});
+
+function showToast(message, type) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+}
+</script>
+{% endblock %}

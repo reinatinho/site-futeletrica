@@ -1,0 +1,61 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+{% load bolao_filters %}
+
+{% block title %}Palpites Públicos{% endblock %}
+
+{% block header_nav %}
+<div class="nav-links">
+    <a href="{% url 'bolao:home' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-arrow-left"></i> Classificação
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="publico-container">
+    <div class="publico-header">
+        <h2><i class="fas fa-users"></i> Palpites Públicos</h2>
+        <p class="publico-subtitle">Todos os palpites dos participantes para validação</p>
+    </div>
+
+    {% for item in participantes %}
+    <div class="participante-card">
+        <div class="participante-card-header">
+            <h3><i class="fas fa-user"></i> {{ item.participante.nome_completo }}</h3>
+        </div>
+        <div class="participante-palpites">
+            {% for grupo in grupos %}
+            <div class="publico-grupo">
+                <h4>Grupo {{ grupo.letra }}</h4>
+                <div class="publico-jogos">
+                    {% for jogo in grupo.jogos.all %}
+                    {% with palpite=item.palpites %}
+                    <div class="publico-jogo-row">
+                        <span class="publico-time">{{ jogo.selecao_casa.bandeira_emoji }} {{ jogo.selecao_casa.nome }}</span>
+                        <span class="publico-placar">
+                            {% if jogo.id in palpite %}
+                            {{ palpite|get_item:jogo.id|get_nested:"casa" }} × {{ palpite|get_item:jogo.id|get_nested:"fora" }}
+                            {% else %}
+                            - × -
+                            {% endif %}
+                        </span>
+                        <span class="publico-time">{{ jogo.selecao_fora.nome }} {{ jogo.selecao_fora.bandeira_emoji }}</span>
+                        {% if jogo.resultado_definido and jogo.id in palpite %}
+                        <span class="publico-pontos">
+                            {% with pts=palpite|get_item:jogo.id|get_nested:"pontos" %}
+                            {% if pts is not None %}+{{ pts }}{% endif %}
+                            {% endwith %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

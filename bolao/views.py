@@ -8,6 +8,7 @@ from .models import (
     Palpite, PalpiteClassificacao, PalpiteExtra, ConfigBolao
 )
 from .forms import LoginForm, CadastroForm
+from .pontuacao import gerar_classificacao_geral, calcular_pontos_jogo
 
 
 def get_participante(request):
@@ -23,7 +24,7 @@ def get_participante(request):
 def login_view(request):
     participante = get_participante(request)
     if participante:
-        return redirect('bolao:palpites')
+        return redirect('bolao:home')
 
     login_form = LoginForm()
     cadastro_form = CadastroForm()
@@ -73,7 +74,7 @@ def login_view(request):
 
 def logout_view(request):
     request.session.pop('participante_id', None)
-    return redirect('bolao:login')
+    return redirect('bolao:home')
 
 
 def palpites_view(request):
@@ -174,3 +175,193 @@ def salvar_palpites(request):
             )
 
     return JsonResponse({'success': True, 'message': 'Palpites salvos com sucesso!'})
+
+
+def home_view(request):
+    """Página principal do bolão com classificação geral."""
+    participante = get_participante(request)
+    config = ConfigBolao.get_config()
+    classificacao = gerar_classificacao_geral()
+
+    jogos_com_resultado = Jogo.objects.filter(
+        gols_casa__isnull=False, gols_fora__isnull=False
+    ).count()
+    total_jogos = Jogo.objects.count()
+
+    return render(request, 'bolao/home.html', {
+        'participante': participante,
+        'classificacao': classificacao,
+        'config': config,
+        'jogos_com_resultado': jogos_com_resultado,
+        'total_jogos': total_jogos,
+    })
+
+
+def palpites_publicos_view(request):
+    """Página pública com todos os palpites (após liberação pelo admin)."""
+    config = ConfigBolao.get_config()
+    if not config.palpites_publicos:
+        messages.info(request, 'Os palpites públicos ainda não foram liberados.')
+        return redirect('bolao:home')
+
+    participantes = Participante.objects.all()
+    grupos = Grupo.objects.prefetch_related(
+        'jogos', 'jogos__selecao_casa', 'jogos__selecao_fora'
+    ).all()
+
+    dados_participantes = []
+    for p in participantes:
+        palpites = {}
+        for palpite in Palpite.objects.filter(participante=p).select_related('jogo'):
+            palpites[palpite.jogo_id] = {
+                'casa': palpite.gols_casa,
+                'fora': palpite.gols_fora,
+                'pontos': palpite.pontos,
+            }
+        dados_participantes.append({
+            'participante': p,
+            'palpites': palpites,
+        })
+
+    return render(request, 'bolao/publico.html', {
+        'participantes': dados_participantes,
+        'grupos': grupos,
+        'config': config,
+    })
+
+
+# ===== ADMIN VIEWS =====
+
+ADMIN_PIN = '1234'  # PIN do admin - pode ser alterado
+
+def admin_required(view_func):
+    """Decorator para verificar acesso admin."""
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get('bolao_admin'):
+            return redirect('bolao:admin_login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def admin_login_view(request):
+    if request.session.get('bolao_admin'):
+        return redirect('bolao:admin_painel')
+
+    if request.method == 'POST':
+        pin = request.POST.get('pin', '')
+        if pin == ADMIN_PIN:
+            request.session['bolao_admin'] = True
+            return redirect('bolao:admin_painel')
+        else:
+            messages.error(request, 'PIN de admin incorreto.')
+
+    return render(request, 'bolao/admin_login.html')
+
+
+@admin_required
+def admin_painel_view(request):
+    config = ConfigBolao.get_config()
+    participantes = Participante.objects.all()
+
+    total_participantes = participantes.count()
+    total_jogos_grupo = Jogo.objects.filter(fase='grupos').count()
+
+    participantes_status = []
+    for p in participantes:
+        palpites_feitos = Palpite.objects.filter(participante=p).count()
+        participantes_status.append({
+            'participante': p,
+            'palpites_feitos': palpites_feitos,
+            'total_esperado': total_jogos_grupo,
+            'completo': palpites_feitos >= total_jogos_grupo,
+            'percentual': round(palpites_feitos / total_jogos_grupo * 100) if total_jogos_grupo else 0,
+        })
+
+    participantes_status.sort(key=lambda x: -x['palpites_feitos'])
+
+    completos = sum(1 for p in participantes_status if p['completo'])
+    pendentes = total_participantes - completos
+
+    grupos = Grupo.objects.prefetch_related(
+        'jogos', 'jogos__selecao_casa', 'jogos__selecao_fora'
+    ).all()
+
+    return render(request, 'bolao/admin_painel.html', {
+        'config': config,
+        'participantes_status': participantes_status,
+        'total_participantes': total_participantes,
+        'completos': completos,
+        'pendentes': pendentes,
+        'grupos': grupos,
+    })
+
+
+@admin_required
+@require_POST
+def admin_salvar_resultado(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    jogo_id = data.get('jogo_id')
+    gols_casa = data.get('gols_casa')
+    gols_fora = data.get('gols_fora')
+
+    if jogo_id is None or gols_casa is None or gols_fora is None:
+        return JsonResponse({'error': 'Campos obrigatórios faltando'}, status=400)
+
+    try:
+        jogo = Jogo.objects.get(id=jogo_id)
+    except Jogo.DoesNotExist:
+        return JsonResponse({'error': 'Jogo não encontrado'}, status=404)
+
+    jogo.gols_casa = int(gols_casa)
+    jogo.gols_fora = int(gols_fora)
+    jogo.save()
+
+    # Recalcular pontos dos palpites deste jogo
+    palpites = Palpite.objects.filter(jogo=jogo)
+    for palpite in palpites:
+        pts = calcular_pontos_jogo(
+            palpite.gols_casa, palpite.gols_fora,
+            jogo.gols_casa, jogo.gols_fora
+        )
+        palpite.pontos = pts
+        palpite.save(update_fields=['pontos'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Resultado salvo: {jogo.selecao_casa} {gols_casa} x {gols_fora} {jogo.selecao_fora}',
+        'palpites_atualizados': palpites.count(),
+    })
+
+
+@admin_required
+@require_POST
+def admin_salvar_config(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    config = ConfigBolao.get_config()
+
+    campos_bool = [
+        'fase_grupos_aberta', 'fase_16avos_aberta', 'fase_oitavas_aberta',
+        'fase_quartas_aberta', 'fase_semi_aberta', 'fase_terceiro_aberta',
+        'fase_final_aberta', 'palpites_publicos',
+    ]
+
+    for campo in campos_bool:
+        if campo in data:
+            setattr(config, campo, bool(data[campo]))
+
+    config.save()
+    return JsonResponse({'success': True, 'message': 'Configurações atualizadas!'})
+
+
+@admin_required
+def admin_logout_view(request):
+    request.session.pop('bolao_admin', None)
+    return redirect('bolao:home')
