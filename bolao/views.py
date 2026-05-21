@@ -110,6 +110,42 @@ def palpites_view(request):
 
     todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji', 'codigo', 'grupo_id'))
 
+    fase_grupos_bloqueada = config.lock_fase_grupos
+
+    todas_fases_elim = []
+    fase_elim_map = [
+        ('16avos', config.fase_16avos_aberta, '16-avos de Final', config.lock_16avos),
+        ('oitavas', config.fase_oitavas_aberta, 'Oitavas de Final', config.lock_oitavas),
+        ('quartas', config.fase_quartas_aberta, 'Quartas de Final', config.lock_quartas),
+        ('semi', config.fase_semi_aberta, 'Semifinais', config.lock_semi),
+        ('terceiro', config.fase_terceiro_aberta, 'Disputa 3º Lugar', config.lock_terceiro),
+        ('final', config.fase_final_aberta, 'Final', config.lock_final),
+    ]
+
+    for fase_cod, aberta, fase_nome, bloqueada in fase_elim_map:
+        jogos = Jogo.objects.filter(fase=fase_cod).select_related(
+            'selecao_casa', 'selecao_fora'
+        )
+        if jogos.exists():
+            todas_fases_elim.append({
+                'codigo': fase_cod,
+                'nome': fase_nome,
+                'aberta': aberta,
+                'bloqueada': bloqueada,
+                'jogos': jogos,
+            })
+
+    palpites_elim_existentes = {}
+    for p in Palpite.objects.filter(
+        participante=participante,
+        jogo__fase__in=['16avos', 'oitavas', 'quartas', 'semi', 'terceiro', 'final']
+    ):
+        palpites_elim_existentes[p.jogo_id] = {
+            'gols_casa': p.gols_casa,
+            'gols_fora': p.gols_fora,
+            'pontos': p.pontos,
+        }
+
     return render(request, 'bolao/palpites.html', {
         'participante': participante,
         'grupos': grupos,
@@ -118,6 +154,9 @@ def palpites_view(request):
         'extras_existentes': json.dumps(extras_existentes),
         'todas_selecoes': json.dumps(todas_selecoes),
         'config': config,
+        'fase_grupos_bloqueada': fase_grupos_bloqueada,
+        'todas_fases_elim': todas_fases_elim,
+        'palpites_elim_existentes': json.dumps(palpites_elim_existentes),
     })
 
 
@@ -130,6 +169,9 @@ def salvar_palpites(request):
     config = ConfigBolao.get_config()
     if not config.fase_grupos_aberta:
         return JsonResponse({'error': 'Palpites da fase de grupos estão fechados'}, status=403)
+
+    if config.lock_fase_grupos:
+        return JsonResponse({'error': 'A fase de grupos está bloqueada. Não é possível enviar ou editar palpites.'}, status=403)
 
     try:
         data = json.loads(request.body)
@@ -200,7 +242,13 @@ def home_view(request):
 def palpites_publicos_view(request):
     """Página pública com todos os palpites (após liberação pelo admin)."""
     config = ConfigBolao.get_config()
-    if not config.palpites_publicos:
+
+    alguma_fase_publica = (
+        config.publico_fase_grupos or config.publico_16avos or
+        config.publico_oitavas or config.publico_quartas or
+        config.publico_semi or config.publico_terceiro or config.publico_final
+    )
+    if not alguma_fase_publica:
         messages.info(request, 'Os palpites públicos ainda não foram liberados.')
         return redirect('bolao:home')
 
@@ -208,6 +256,27 @@ def palpites_publicos_view(request):
     grupos = Grupo.objects.prefetch_related(
         'jogos', 'jogos__selecao_casa', 'jogos__selecao_fora'
     ).all()
+
+    fases_elim_publicas = []
+    fase_publico_map = [
+        ('16avos', config.publico_16avos, '16-avos de Final'),
+        ('oitavas', config.publico_oitavas, 'Oitavas de Final'),
+        ('quartas', config.publico_quartas, 'Quartas de Final'),
+        ('semi', config.publico_semi, 'Semifinais'),
+        ('terceiro', config.publico_terceiro, 'Disputa 3º Lugar'),
+        ('final', config.publico_final, 'Final'),
+    ]
+    for fase_cod, publico, fase_nome in fase_publico_map:
+        if publico:
+            jogos = Jogo.objects.filter(
+                fase=fase_cod, selecao_casa__isnull=False, selecao_fora__isnull=False
+            ).select_related('selecao_casa', 'selecao_fora')
+            if jogos.exists():
+                fases_elim_publicas.append({
+                    'codigo': fase_cod,
+                    'nome': fase_nome,
+                    'jogos': jogos,
+                })
 
     dados_participantes = []
     for p in participantes:
@@ -226,13 +295,14 @@ def palpites_publicos_view(request):
     return render(request, 'bolao/publico.html', {
         'participantes': dados_participantes,
         'grupos': grupos,
+        'fases_elim_publicas': fases_elim_publicas,
         'config': config,
     })
 
 
 # ===== ADMIN VIEWS =====
 
-ADMIN_PIN = '1234'  # PIN do admin - pode ser alterado
+ADMIN_PASSWORD = 'Limonadadonorte@2026'
 
 def admin_required(view_func):
     """Decorator para verificar acesso admin."""
@@ -248,12 +318,12 @@ def admin_login_view(request):
         return redirect('bolao:admin_painel')
 
     if request.method == 'POST':
-        pin = request.POST.get('pin', '')
-        if pin == ADMIN_PIN:
+        senha = request.POST.get('senha', '')
+        if senha == ADMIN_PASSWORD:
             request.session['bolao_admin'] = True
             return redirect('bolao:admin_painel')
         else:
-            messages.error(request, 'PIN de admin incorreto.')
+            messages.error(request, 'Senha de admin incorreta.')
 
     return render(request, 'bolao/admin_login.html')
 
@@ -264,7 +334,7 @@ def admin_painel_view(request):
     participantes = Participante.objects.all()
 
     total_participantes = participantes.count()
-    total_jogos_grupo = Jogo.objects.filter(fase='grupos').count()
+    total_jogos = Jogo.objects.count()
 
     participantes_status = []
     for p in participantes:
@@ -272,9 +342,9 @@ def admin_painel_view(request):
         participantes_status.append({
             'participante': p,
             'palpites_feitos': palpites_feitos,
-            'total_esperado': total_jogos_grupo,
-            'completo': palpites_feitos >= total_jogos_grupo,
-            'percentual': round(palpites_feitos / total_jogos_grupo * 100) if total_jogos_grupo else 0,
+            'total_esperado': total_jogos,
+            'completo': palpites_feitos >= total_jogos,
+            'percentual': round(palpites_feitos / total_jogos * 100) if total_jogos else 0,
         })
 
     participantes_status.sort(key=lambda x: -x['palpites_feitos'])
@@ -286,6 +356,20 @@ def admin_painel_view(request):
         'jogos', 'jogos__selecao_casa', 'jogos__selecao_fora'
     ).all()
 
+    fases_elim = []
+    for fase_cod, fase_nome in Jogo.FASE_CHOICES:
+        if fase_cod == 'grupos':
+            continue
+        jogos = Jogo.objects.filter(
+            fase=fase_cod, selecao_casa__isnull=False, selecao_fora__isnull=False
+        ).select_related('selecao_casa', 'selecao_fora')
+        if jogos.exists():
+            fases_elim.append({
+                'codigo': fase_cod,
+                'nome': fase_nome,
+                'jogos': jogos,
+            })
+
     return render(request, 'bolao/admin_painel.html', {
         'config': config,
         'participantes_status': participantes_status,
@@ -293,6 +377,7 @@ def admin_painel_view(request):
         'completos': completos,
         'pendentes': pendentes,
         'grupos': grupos,
+        'fases_elim': fases_elim,
     })
 
 
@@ -351,6 +436,10 @@ def admin_salvar_config(request):
         'fase_grupos_aberta', 'fase_16avos_aberta', 'fase_oitavas_aberta',
         'fase_quartas_aberta', 'fase_semi_aberta', 'fase_terceiro_aberta',
         'fase_final_aberta', 'palpites_publicos',
+        'publico_fase_grupos', 'publico_16avos', 'publico_oitavas',
+        'publico_quartas', 'publico_semi', 'publico_terceiro', 'publico_final',
+        'lock_fase_grupos', 'lock_16avos', 'lock_oitavas',
+        'lock_quartas', 'lock_semi', 'lock_terceiro', 'lock_final',
     ]
 
     for campo in campos_bool:
@@ -371,15 +460,15 @@ def palpites_eliminatorias_view(request):
 
     fases_disponiveis = []
     fase_map = [
-        ('16avos', config.fase_16avos_aberta, '16-avos de Final'),
-        ('oitavas', config.fase_oitavas_aberta, 'Oitavas de Final'),
-        ('quartas', config.fase_quartas_aberta, 'Quartas de Final'),
-        ('semi', config.fase_semi_aberta, 'Semifinais'),
-        ('terceiro', config.fase_terceiro_aberta, 'Disputa 3º Lugar'),
-        ('final', config.fase_final_aberta, 'Final'),
+        ('16avos', config.fase_16avos_aberta, '16-avos de Final', config.lock_16avos),
+        ('oitavas', config.fase_oitavas_aberta, 'Oitavas de Final', config.lock_oitavas),
+        ('quartas', config.fase_quartas_aberta, 'Quartas de Final', config.lock_quartas),
+        ('semi', config.fase_semi_aberta, 'Semifinais', config.lock_semi),
+        ('terceiro', config.fase_terceiro_aberta, 'Disputa 3º Lugar', config.lock_terceiro),
+        ('final', config.fase_final_aberta, 'Final', config.lock_final),
     ]
 
-    for fase_cod, aberta, fase_nome in fase_map:
+    for fase_cod, aberta, fase_nome, bloqueada in fase_map:
         jogos = Jogo.objects.filter(fase=fase_cod, selecao_casa__isnull=False, selecao_fora__isnull=False).select_related(
             'selecao_casa', 'selecao_fora'
         )
@@ -388,6 +477,7 @@ def palpites_eliminatorias_view(request):
                 'codigo': fase_cod,
                 'nome': fase_nome,
                 'aberta': aberta,
+                'bloqueada': bloqueada,
                 'jogos': jogos,
             })
 
@@ -432,6 +522,15 @@ def salvar_palpites_eliminatorias(request):
         'final': config.fase_final_aberta,
     }
 
+    fase_lock_map = {
+        '16avos': config.lock_16avos,
+        'oitavas': config.lock_oitavas,
+        'quartas': config.lock_quartas,
+        'semi': config.lock_semi,
+        'terceiro': config.lock_terceiro,
+        'final': config.lock_final,
+    }
+
     for jogo_id_str, valores in palpites_data.items():
         jogo_id = int(jogo_id_str)
         gols_casa = valores.get('gols_casa')
@@ -444,6 +543,9 @@ def salvar_palpites_eliminatorias(request):
                 continue
 
             if not fase_aberta_map.get(jogo.fase, False):
+                continue
+
+            if fase_lock_map.get(jogo.fase, False):
                 continue
 
             if not jogo.equipes_definidas:
@@ -521,7 +623,7 @@ def admin_eliminatorias_view(request):
                 'jogos': jogos,
             })
 
-    todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji').order_by('nome'))
+    todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji', 'codigo').order_by('nome'))
 
     return render(request, 'bolao/admin_eliminatorias.html', {
         'config': config,

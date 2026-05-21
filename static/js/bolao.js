@@ -426,7 +426,7 @@ function collectDataParcial() {
     const palpites = {};
     const extras = {};
 
-    document.querySelectorAll('.jogo-row').forEach(row => {
+    document.querySelectorAll('#etapa-grupos-content .jogo-row:not(.jogo-row-elim)').forEach(row => {
         const jogoId = row.dataset.jogoId;
         const casa = row.querySelector('.gols-casa');
         const fora = row.querySelector('.gols-fora');
@@ -465,13 +465,13 @@ function updateRascunhoInfo() {
 }
 
 function validateAll() {
-    const jogosRows = document.querySelectorAll('.jogo-row');
+    const jogosRows = document.querySelectorAll('#etapa-grupos-content .jogo-row:not(.jogo-row-elim)');
     const vazios = [];
 
     jogosRows.forEach(row => {
         const casa = row.querySelector('.gols-casa');
         const fora = row.querySelector('.gols-fora');
-        if (casa.value === '' || fora.value === '') {
+        if (!casa || !fora || casa.value === '' || fora.value === '') {
             const grupo = row.dataset.grupo;
             const times = row.querySelector('.time-casa .time-nome').textContent.trim() +
                          ' x ' + row.querySelector('.time-fora .time-nome').textContent.trim();
@@ -505,8 +505,8 @@ function collectData() {
     const classificacoes = {};
     const extras = {};
 
-    // Palpites de jogos
-    document.querySelectorAll('.jogo-row').forEach(row => {
+    // Palpites de jogos (somente fase de grupos)
+    document.querySelectorAll('#etapa-grupos-content .jogo-row:not(.jogo-row-elim)').forEach(row => {
         const jogoId = row.dataset.jogoId;
         const casa = row.querySelector('.gols-casa').value;
         const fora = row.querySelector('.gols-fora').value;
