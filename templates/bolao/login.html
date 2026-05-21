@@ -1,0 +1,125 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="{% static 'images/logo.png' %}" alt="Fut Elétrica" class="login-logo">
+            <h2>Bolão Copa do Mundo 2026</h2>
+            <p class="login-subtitle">Faça seus palpites e concorra!</p>
+        </div>
+
+        <div class="login-tabs">
+            <button class="tab-btn {% if not show_cadastro %}active{% endif %}" data-tab="login">Entrar</button>
+            <button class="tab-btn {% if show_cadastro %}active{% endif %}" data-tab="cadastro">Criar Conta</button>
+        </div>
+
+        <div class="tab-content {% if not show_cadastro %}active{% endif %}" id="tab-login">
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="login">
+                <div class="form-group">
+                    <label for="id_username"><i class="fas fa-user"></i> Usuário</label>
+                    {{ login_form.username }}
+                    {% if login_form.username.errors %}
+                    <span class="form-error">{{ login_form.username.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_pin"><i class="fas fa-lock"></i> PIN</label>
+                    {{ login_form.pin }}
+                    {% if login_form.pin.errors %}
+                    <span class="form-error">{{ login_form.pin.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+            </form>
+        </div>
+
+        <div class="tab-content {% if show_cadastro %}active{% endif %}" id="tab-cadastro">
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cadastro">
+                <div class="form-group">
+                    <label for="id_cadastro_username"><i class="fas fa-user"></i> Usuário</label>
+                    {{ cadastro_form.username }}
+                    {% if cadastro_form.username.errors %}
+                    <span class="form-error">{{ cadastro_form.username.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_cadastro_nome"><i class="fas fa-id-card"></i> Nome</label>
+                    {{ cadastro_form.nome }}
+                </div>
+                <div class="form-group">
+                    <label for="id_cadastro_sobrenome"><i class="fas fa-id-card"></i> Sobrenome</label>
+                    {{ cadastro_form.sobrenome }}
+                </div>
+                <div class="form-group">
+                    <label for="id_cadastro_pin"><i class="fas fa-lock"></i> PIN (4 dígitos)</label>
+                    {{ cadastro_form.pin }}
+                    {% if cadastro_form.pin.errors %}
+                    <span class="form-error">{{ cadastro_form.pin.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_cadastro_pin_confirma"><i class="fas fa-lock"></i> Confirme o PIN</label>
+                    {{ cadastro_form.pin_confirma }}
+                    {% if cadastro_form.pin_confirma.errors %}
+                    <span class="form-error">{{ cadastro_form.pin_confirma.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Criar Conta
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if show_pix_modal %}
+<div class="modal-overlay active" id="pix-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <i class="fas fa-check-circle modal-icon-success"></i>
+            <h3>Conta criada com sucesso!</h3>
+        </div>
+        <div class="modal-body">
+            <p>Para participar do bolão, envie o comprovante do <strong>PIX de R$ 50,00</strong> para o Admin <strong>Phillipe</strong> pelo WhatsApp:</p>
+            <a href="https://api.whatsapp.com/send/?phone=%2B554196222162&text&type=phone_number&app_absent=0"
+               target="_blank" class="btn btn-whatsapp">
+                <i class="fab fa-whatsapp"></i> Enviar Comprovante via WhatsApp
+            </a>
+        </div>
+        <div class="modal-footer">
+            <a href="{% url 'bolao:palpites' %}" class="btn btn-primary">
+                <i class="fas fa-futbol"></i> Ir para Palpites
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}
