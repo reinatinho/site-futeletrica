@@ -21,10 +21,14 @@
 
     {% for item in participantes %}
     <div class="participante-card">
-        <div class="participante-card-header">
-            <h3><i class="fas fa-user"></i> {{ item.participante.nome_completo }}</h3>
+        <div class="participante-card-header participante-toggle" data-target="participante-{{ forloop.counter }}">
+            <h3>
+                <i class="fas fa-user"></i> {{ item.participante.nome_completo }}
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </h3>
         </div>
-        <div class="participante-palpites">
+        <div class="participante-palpites" id="participante-{{ forloop.counter }}" style="display: none;">
+            {% if config.publico_fase_grupos %}
             {% for grupo in grupos %}
             <div class="publico-grupo">
                 <h4>Grupo {{ grupo.letra }}</h4>
@@ -54,8 +58,62 @@
                 </div>
             </div>
             {% endfor %}
+            {% endif %}
+
+            {% for fase in fases_elim_publicas %}
+            <div class="publico-grupo">
+                <h4><i class="fas fa-trophy"></i> {{ fase.nome }}</h4>
+                <div class="publico-jogos">
+                    {% for jogo in fase.jogos %}
+                    {% with palpite=item.palpites %}
+                    <div class="publico-jogo-row">
+                        <span class="publico-time"><img src="{% static jogo.selecao_casa|flag_url %}" alt="" class="bandeira-img-sm"> {{ jogo.selecao_casa.nome }}</span>
+                        <span class="publico-placar">
+                            {% if jogo.id in palpite %}
+                            {{ palpite|get_item:jogo.id|get_nested:"casa" }} × {{ palpite|get_item:jogo.id|get_nested:"fora" }}
+                            {% else %}
+                            - × -
+                            {% endif %}
+                        </span>
+                        <span class="publico-time">{{ jogo.selecao_fora.nome }} <img src="{% static jogo.selecao_fora|flag_url %}" alt="" class="bandeira-img-sm"></span>
+                        {% if jogo.resultado_definido and jogo.id in palpite %}
+                        <span class="publico-pontos">
+                            {% with pts=palpite|get_item:jogo.id|get_nested:"pontos" %}
+                            {% if pts is not None %}+{{ pts }}{% endif %}
+                            {% endwith %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.participante-toggle').forEach(header => {
+        header.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const content = document.getElementById(targetId);
+            const icon = this.querySelector('.toggle-icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

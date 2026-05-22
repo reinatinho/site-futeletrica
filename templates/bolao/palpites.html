@@ -16,54 +16,227 @@
 {% block content %}
 <div class="palpites-container">
     <div class="palpites-header">
-        <h2><i class="fas fa-futbol"></i> Palpites — Fase de Grupos</h2>
+        <h2><i class="fas fa-futbol"></i> Meus Palpites</h2>
         <p class="deadline-info">
-            <i class="fas fa-clock"></i> Prazo: <strong>08 de Junho de 2026</strong>
+            <i class="fas fa-clock"></i> Prazo fase de grupos: <strong>08 de Junho de 2026</strong>
         </p>
     </div>
 
-    {% if not config.fase_grupos_aberta %}
-    <div class="alert alert-warning">
-        <i class="fas fa-lock"></i> Os palpites da fase de grupos estão fechados.
-    </div>
-    {% endif %}
+    <!-- ===== FASE DE GRUPOS ===== -->
+    <div class="etapa-section" id="etapa-grupos">
+        <div class="etapa-header etapa-toggle" data-target="etapa-grupos-content">
+            <h3><i class="fas fa-layer-group"></i> Fase de Grupos</h3>
+            <div class="etapa-header-right">
+                {% if fase_grupos_bloqueada %}
+                <span class="badge badge-error"><i class="fas fa-lock"></i> Bloqueada</span>
+                {% elif config.fase_grupos_aberta %}
+                <span class="badge badge-success"><i class="fas fa-unlock"></i> Aberta</span>
+                {% else %}
+                <span class="badge badge-warning"><i class="fas fa-lock"></i> Fechada</span>
+                {% endif %}
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="etapa-content" id="etapa-grupos-content">
+            {% if not config.fase_grupos_aberta %}
+            <div class="alert alert-warning" style="margin: 1rem 0 0;">
+                <i class="fas fa-lock"></i> Os palpites da fase de grupos estão fechados.
+            </div>
+            {% elif fase_grupos_bloqueada %}
+            <div class="alert alert-error" style="margin: 1rem 0 0;">
+                <i class="fas fa-lock"></i> A fase de grupos está bloqueada. Não é possível enviar ou editar palpites.
+            </div>
+            {% endif %}
 
-    <div class="grupos-grid">
-        {% for grupo in grupos %}
-        <div class="grupo-card" id="grupo-{{ grupo.letra }}">
-            <div class="grupo-header">
-                <h3>Grupo {{ grupo.letra }}</h3>
-                <span class="grupo-status" id="status-{{ grupo.letra }}">
-                    <i class="fas fa-circle"></i> Pendente
-                </span>
+            <div class="grupos-grid">
+                {% for grupo in grupos %}
+                <div class="grupo-card" id="grupo-{{ grupo.letra }}">
+                    <div class="grupo-header">
+                        <h3>Grupo {{ grupo.letra }}</h3>
+                        <span class="grupo-status" id="status-{{ grupo.letra }}">
+                            <i class="fas fa-circle"></i> Pendente
+                        </span>
+                    </div>
+
+                    <div class="jogos-list">
+                        {% for jogo in grupo.jogos.all %}
+                        <div class="jogo-row" data-jogo-id="{{ jogo.id }}" data-grupo="{{ grupo.letra }}"
+                             data-casa-id="{{ jogo.selecao_casa.id }}" data-fora-id="{{ jogo.selecao_fora.id }}">
+                            <div class="jogo-data">
+                                {{ jogo.data_hora|date:"d/m H:i" }}
+                            </div>
+                            <div class="jogo-times">
+                                <div class="time-casa">
+                                    <img src="{% static jogo.selecao_casa|flag_url %}" alt="{{ jogo.selecao_casa.codigo }}" class="bandeira-img">
+                                    <span class="time-nome">{{ jogo.selecao_casa.nome }}</span>
+                                </div>
+                                <div class="placar-inputs">
+                                    <input type="number" min="0" max="9" class="placar-input gols-casa"
+                                           data-jogo="{{ jogo.id }}" data-tipo="casa"
+                                           {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                                    <span class="placar-x">×</span>
+                                    <input type="number" min="0" max="9" class="placar-input gols-fora"
+                                           data-jogo="{{ jogo.id }}" data-tipo="fora"
+                                           {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                                </div>
+                                <div class="time-fora">
+                                    <span class="time-nome">{{ jogo.selecao_fora.nome }}</span>
+                                    <img src="{% static jogo.selecao_fora|flag_url %}" alt="{{ jogo.selecao_fora.codigo }}" class="bandeira-img">
+                                </div>
+                            </div>
+                            {% if jogo.resultado_definido %}
+                            <div class="resultado-oficial">
+                                <span class="resultado-label">Resultado:</span>
+                                <span class="resultado-placar">{{ jogo.gols_casa }} × {{ jogo.gols_fora }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="classificacao-grupo" id="classificacao-{{ grupo.letra }}">
+                        <h4><i class="fas fa-trophy"></i> Classificação Esperada</h4>
+                        <table class="tabela-classificacao">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Seleção</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>1º</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for selecao in grupo.selecoes.all %}
+                                <tr data-selecao-id="{{ selecao.id }}">
+                                    <td class="pos">-</td>
+                                    <td class="sel-nome"><img src="{% static selecao|flag_url %}" alt="{{ selecao.codigo }}" class="bandeira-img-sm"> {{ selecao.nome }}</td>
+                                    <td class="pts">0</td><td class="vit">0</td><td class="emp">0</td><td class="der">0</td>
+                                    <td class="gp">0</td><td class="gc">0</td><td class="sg">0</td>
+                                    <td class="estrela-col">
+                                        <button class="btn-estrela" data-selecao="{{ selecao.id }}" data-grupo="{{ grupo.id }}">
+                                            <i class="far fa-star"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
 
-            <div class="jogos-list">
-                {% for jogo in grupo.jogos.all %}
-                <div class="jogo-row" data-jogo-id="{{ jogo.id }}" data-grupo="{{ grupo.letra }}"
-                     data-casa-id="{{ jogo.selecao_casa.id }}" data-fora-id="{{ jogo.selecao_fora.id }}">
-                    <div class="jogo-data">
-                        {{ jogo.data_hora|date:"d/m H:i" }}
+            <div class="extras-section">
+                <h3><i class="fas fa-medal"></i> Palpites Especiais</h3>
+                <div class="extras-grid">
+                    <div class="extra-card">
+                        <label><i class="fas fa-trophy" style="color: gold;"></i> Campeão</label>
+                        <select class="extra-select" data-tipo="campeao" {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
+                    <div class="extra-card">
+                        <label><i class="fas fa-medal" style="color: silver;"></i> Vice-Campeão</label>
+                        <select class="extra-select" data-tipo="vice" {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="extra-card">
+                        <label><i class="fas fa-medal" style="color: #cd7f32;"></i> Terceiro Colocado</label>
+                        <select class="extra-select" data-tipo="terceiro" {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="extra-card">
+                        <label><i class="fas fa-thumbs-down"></i> Pior Seleção</label>
+                        <select class="extra-select" data-tipo="pior" {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% if config.fase_grupos_aberta and not fase_grupos_bloqueada %}
+            <div class="salvar-section">
+                <div class="validacao-aviso" id="validacao-aviso" style="display:none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="validacao-texto"></span>
+                </div>
+                <p class="rascunho-info" id="rascunho-info" style="display:none;"></p>
+                <div class="salvar-buttons">
+                    <button class="btn btn-outline btn-lg" id="btn-rascunho">
+                        <i class="fas fa-save"></i> Salvar Rascunho
+                    </button>
+                    <button class="btn btn-primary btn-lg" id="btn-enviar">
+                        <i class="fas fa-paper-plane"></i> Enviar Palpites
+                    </button>
+                </div>
+                <p class="salvar-hint">
+                    <strong>Salvar Rascunho:</strong> guarda no seu navegador para continuar depois.<br>
+                    <strong>Enviar Palpites:</strong> salva definitivamente no servidor (precisa estar tudo preenchido).
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===== FASES ELIMINATÓRIAS ===== -->
+    {% for fase in todas_fases_elim %}
+    <div class="etapa-section" id="etapa-{{ fase.codigo }}">
+        <div class="etapa-header etapa-toggle" data-target="etapa-{{ fase.codigo }}-content">
+            <h3><i class="fas fa-trophy"></i> {{ fase.nome }}</h3>
+            <div class="etapa-header-right">
+                {% if fase.bloqueada %}
+                <span class="badge badge-error"><i class="fas fa-lock"></i> Bloqueada</span>
+                {% elif fase.aberta %}
+                <span class="badge badge-success"><i class="fas fa-unlock"></i> Aberta</span>
+                {% else %}
+                <span class="badge badge-warning"><i class="fas fa-lock"></i> Fechada</span>
+                {% endif %}
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="etapa-content" id="etapa-{{ fase.codigo }}-content" style="display: none;">
+            <div class="jogos-list" style="padding: 1rem 0;">
+                {% for jogo in fase.jogos %}
+                <div class="jogo-row jogo-row-elim" data-jogo-id="{{ jogo.id }}"
+                     {% if jogo.equipes_definidas %}data-casa-id="{{ jogo.selecao_casa.id }}" data-fora-id="{{ jogo.selecao_fora.id }}"{% endif %}>
+                    <div class="jogo-data">
+                        Jogo {{ jogo.numero_jogo }} — {{ jogo.data_hora|date:"d/m H:i" }}
+                    </div>
+                    {% if jogo.equipes_definidas %}
                     <div class="jogo-times">
                         <div class="time-casa">
                             <img src="{% static jogo.selecao_casa|flag_url %}" alt="{{ jogo.selecao_casa.codigo }}" class="bandeira-img">
                             <span class="time-nome">{{ jogo.selecao_casa.nome }}</span>
                         </div>
                         <div class="placar-inputs">
-                            <input type="number" min="0" max="9" class="placar-input gols-casa"
+                            <input type="number" min="0" max="9" class="placar-input gols-casa elim-input"
                                    data-jogo="{{ jogo.id }}" data-tipo="casa"
-                                   {% if not config.fase_grupos_aberta %}disabled{% endif %}>
+                                   {% if not fase.aberta or fase.bloqueada %}disabled{% endif %}>
                             <span class="placar-x">×</span>
-                            <input type="number" min="0" max="9" class="placar-input gols-fora"
+                            <input type="number" min="0" max="9" class="placar-input gols-fora elim-input"
                                    data-jogo="{{ jogo.id }}" data-tipo="fora"
-                                   {% if not config.fase_grupos_aberta %}disabled{% endif %}>
+                                   {% if not fase.aberta or fase.bloqueada %}disabled{% endif %}>
                         </div>
                         <div class="time-fora">
                             <span class="time-nome">{{ jogo.selecao_fora.nome }}</span>
                             <img src="{% static jogo.selecao_fora|flag_url %}" alt="{{ jogo.selecao_fora.codigo }}" class="bandeira-img">
                         </div>
                     </div>
+                    {% else %}
+                    <div class="jogo-times jogo-tbd">
+                        <div class="time-casa">
+                            <span class="tbd-icon"><i class="fas fa-question-circle"></i></span>
+                            <span class="time-nome tbd-nome">A definir</span>
+                        </div>
+                        <div class="placar-inputs">
+                            <span class="placar-x tbd-vs">vs</span>
+                        </div>
+                        <div class="time-fora">
+                            <span class="time-nome tbd-nome">A definir</span>
+                            <span class="tbd-icon"><i class="fas fa-question-circle"></i></span>
+                        </div>
+                    </div>
+                    <div class="tbd-desc">{{ jogo.descricao }}</div>
+                    {% endif %}
                     {% if jogo.resultado_definido %}
                     <div class="resultado-oficial">
                         <span class="resultado-label">Resultado:</span>
@@ -74,100 +247,16 @@
                 {% endfor %}
             </div>
 
-            <div class="classificacao-grupo" id="classificacao-{{ grupo.letra }}">
-                <h4><i class="fas fa-trophy"></i> Classificação Esperada</h4>
-                <table class="tabela-classificacao">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Seleção</th>
-                            <th>P</th>
-                            <th>V</th>
-                            <th>E</th>
-                            <th>D</th>
-                            <th>GP</th>
-                            <th>GC</th>
-                            <th>SG</th>
-                            <th>1º</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for selecao in grupo.selecoes.all %}
-                        <tr data-selecao-id="{{ selecao.id }}">
-                            <td class="pos">-</td>
-                            <td class="sel-nome"><img src="{% static selecao|flag_url %}" alt="{{ selecao.codigo }}" class="bandeira-img-sm"> {{ selecao.nome }}</td>
-                            <td class="pts">0</td>
-                            <td class="vit">0</td>
-                            <td class="emp">0</td>
-                            <td class="der">0</td>
-                            <td class="gp">0</td>
-                            <td class="gc">0</td>
-                            <td class="sg">0</td>
-                            <td class="estrela-col">
-                                <button class="btn-estrela" data-selecao="{{ selecao.id }}" data-grupo="{{ grupo.id }}">
-                                    <i class="far fa-star"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            {% if fase.aberta and not fase.bloqueada %}
+            <div class="salvar-section">
+                <button class="btn btn-primary btn-lg btn-salvar-elim" data-fase="{{ fase.codigo }}">
+                    <i class="fas fa-save"></i> Salvar Palpites — {{ fase.nome }}
+                </button>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <div class="extras-section">
-        <h3><i class="fas fa-medal"></i> Palpites Especiais</h3>
-        <div class="extras-grid">
-            <div class="extra-card">
-                <label><i class="fas fa-trophy" style="color: gold;"></i> Campeão</label>
-                <select class="extra-select" data-tipo="campeao" {% if not config.fase_grupos_aberta %}disabled{% endif %}>
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-            <div class="extra-card">
-                <label><i class="fas fa-medal" style="color: silver;"></i> Vice-Campeão</label>
-                <select class="extra-select" data-tipo="vice" {% if not config.fase_grupos_aberta %}disabled{% endif %}>
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-            <div class="extra-card">
-                <label><i class="fas fa-medal" style="color: #cd7f32;"></i> Terceiro Colocado</label>
-                <select class="extra-select" data-tipo="terceiro" {% if not config.fase_grupos_aberta %}disabled{% endif %}>
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-            <div class="extra-card">
-                <label><i class="fas fa-thumbs-down"></i> Pior Seleção</label>
-                <select class="extra-select" data-tipo="pior" {% if not config.fase_grupos_aberta %}disabled{% endif %}>
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
+            {% endif %}
         </div>
     </div>
-
-    {% if config.fase_grupos_aberta %}
-    <div class="salvar-section">
-        <div class="validacao-aviso" id="validacao-aviso" style="display:none;">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span id="validacao-texto"></span>
-        </div>
-        <p class="rascunho-info" id="rascunho-info" style="display:none;"></p>
-        <div class="salvar-buttons">
-            <button class="btn btn-outline btn-lg" id="btn-rascunho">
-                <i class="fas fa-save"></i> Salvar Rascunho
-            </button>
-            <button class="btn btn-primary btn-lg" id="btn-enviar">
-                <i class="fas fa-paper-plane"></i> Enviar Palpites
-            </button>
-        </div>
-        <p class="salvar-hint">
-            <strong>Salvar Rascunho:</strong> guarda no seu navegador para continuar depois.<br>
-            <strong>Enviar Palpites:</strong> salva definitivamente no servidor (precisa estar tudo preenchido).
-        </p>
-    </div>
-    {% endif %}
+    {% endfor %}
 </div>
 {% endblock %}
 
@@ -177,8 +266,94 @@
     const CLASSIFICACOES_EXISTENTES = {{ classificacoes_existentes|safe }};
     const EXTRAS_EXISTENTES = {{ extras_existentes|safe }};
     const TODAS_SELECOES = {{ todas_selecoes|safe }};
+    const PALPITES_ELIM = {{ palpites_elim_existentes|safe }};
     const CSRF_TOKEN = '{{ csrf_token }}';
     const SALVAR_URL = '{% url "bolao:salvar_palpites" %}';
+    const SALVAR_ELIM_URL = '{% url "bolao:salvar_palpites_eliminatorias" %}';
 </script>
 <script src="{% static 'js/bolao.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // === Accordion de etapas ===
+    document.querySelectorAll('.etapa-toggle').forEach(header => {
+        header.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const content = document.getElementById(targetId);
+            const icon = this.querySelector('.toggle-icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        });
+    });
+
+    // Fase de grupos começa expandida
+    const gruposContent = document.getElementById('etapa-grupos-content');
+    if (gruposContent) {
+        gruposContent.style.display = 'block';
+        const gruposIcon = document.querySelector('[data-target="etapa-grupos-content"] .toggle-icon');
+        if (gruposIcon) {
+            gruposIcon.classList.remove('fa-chevron-down');
+            gruposIcon.classList.add('fa-chevron-up');
+        }
+    }
+
+    // === Carregar palpites de eliminatórias ===
+    for (const [jogoId, dados] of Object.entries(PALPITES_ELIM)) {
+        const row = document.querySelector(`.jogo-row-elim[data-jogo-id="${jogoId}"]`);
+        if (row) {
+            const casaInput = row.querySelector('.gols-casa');
+            const foraInput = row.querySelector('.gols-fora');
+            if (dados.gols_casa !== null && casaInput) { casaInput.value = dados.gols_casa; casaInput.classList.add('filled'); }
+            if (dados.gols_fora !== null && foraInput) { foraInput.value = dados.gols_fora; foraInput.classList.add('filled'); }
+        }
+    }
+
+    // === Inputs de eliminatórias ===
+    document.querySelectorAll('.elim-input').forEach(input => {
+        input.addEventListener('input', function() {
+            let val = this.value.replace(/[^0-9]/g, '');
+            if (val.length > 1) val = val.charAt(0);
+            this.value = val;
+            this.classList.toggle('filled', val !== '');
+        });
+        input.addEventListener('focus', function() { this.select(); });
+    });
+
+    // === Salvar eliminatórias por fase ===
+    document.querySelectorAll('.btn-salvar-elim').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const faseCod = this.dataset.fase;
+            const section = document.getElementById('etapa-' + faseCod + '-content');
+            const palpites = {};
+            section.querySelectorAll('.jogo-row-elim').forEach(row => {
+                const jogoId = row.dataset.jogoId;
+                const casa = row.querySelector('.gols-casa');
+                const fora = row.querySelector('.gols-fora');
+                if (casa && fora && casa.value !== '' && fora.value !== '' && !casa.disabled) {
+                    palpites[jogoId] = { gols_casa: parseInt(casa.value), gols_fora: parseInt(fora.value) };
+                }
+            });
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            try {
+                const resp = await fetch(SALVAR_ELIM_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                    body: JSON.stringify({ palpites }),
+                });
+                const result = await resp.json();
+                showToast(result.message || result.error, resp.ok ? 'success' : 'error');
+            } catch (e) { showToast('Erro de conexão', 'error'); }
+            this.disabled = false;
+            this.innerHTML = `<i class="fas fa-save"></i> Salvar Palpites — ${this.closest('.etapa-section').querySelector('.etapa-header h3').textContent.trim()}`;
+        });
+    });
+});
+</script>
 {% endblock %}
