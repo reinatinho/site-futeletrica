@@ -23,6 +23,9 @@
                 <a href="{% url 'main:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-chart-bar"></i> Dashboard
                 </a>
+                <a href="{% url 'bolao:home' %}" class="nav-link {% if request.resolver_match.namespace == 'bolao' %}active{% endif %}">
+                    <i class="fas fa-futbol"></i> Bolão
+                </a>
                 <a href="https://instagram.com/futeletrica2013" target="_blank" class="nav-link">
                     <i class="fab fa-instagram"></i> @futeletrica2013
                 </a>

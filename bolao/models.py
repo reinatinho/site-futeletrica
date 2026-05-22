@@ -152,6 +152,22 @@ class ConfigBolao(models.Model):
     fase_final_aberta = models.BooleanField(default=False)
     palpites_publicos = models.BooleanField(default=False)
 
+    lock_fase_grupos = models.BooleanField(default=False)
+    lock_16avos = models.BooleanField(default=False)
+    lock_oitavas = models.BooleanField(default=False)
+    lock_quartas = models.BooleanField(default=False)
+    lock_semi = models.BooleanField(default=False)
+    lock_terceiro = models.BooleanField(default=False)
+    lock_final = models.BooleanField(default=False)
+
+    publico_fase_grupos = models.BooleanField(default=False)
+    publico_16avos = models.BooleanField(default=False)
+    publico_oitavas = models.BooleanField(default=False)
+    publico_quartas = models.BooleanField(default=False)
+    publico_semi = models.BooleanField(default=False)
+    publico_terceiro = models.BooleanField(default=False)
+    publico_final = models.BooleanField(default=False)
+
     class Meta:
         verbose_name = 'Configuração do Bolão'
         verbose_name_plural = 'Configurações do Bolão'

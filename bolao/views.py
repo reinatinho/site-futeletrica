@@ -243,7 +243,7 @@ def palpites_publicos_view(request):
     """Página pública com todos os palpites (após liberação pelo admin)."""
     config = ConfigBolao.get_config()
 
-    alguma_fase_publica = (
+    alguma_fase_publica = config.palpites_publicos or (
         config.publico_fase_grupos or config.publico_16avos or
         config.publico_oitavas or config.publico_quartas or
         config.publico_semi or config.publico_terceiro or config.publico_final
