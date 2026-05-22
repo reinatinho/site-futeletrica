@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bolão Copa 2026{% endblock %} — Fut Elétrica</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bolao.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="bolao-header">
+        <div class="header-container">
+            <a href="{% url 'bolao:login' %}" class="header-logo">
+                <img src="{% static 'images/logo.png' %}" alt="Fut Elétrica" class="logo-img">
+                <div class="header-title">
+                    <h1>Bolão Copa 2026</h1>
+                    <span class="header-subtitle">Fut Elétrica</span>
+                </div>
+            </a>
+            <nav class="header-nav">
+                {% block header_nav %}{% endblock %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="bolao-main">
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bolao-footer">
+        <p>&copy; 2026 Fut Elétrica — Bolão Copa do Mundo</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

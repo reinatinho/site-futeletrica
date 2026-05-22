@@ -1,0 +1,158 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+
+{% block title %}Admin — Eliminatórias{% endblock %}
+
+{% block header_nav %}
+<div class="nav-links">
+    <a href="{% url 'bolao:admin_painel' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-arrow-left"></i> Painel
+    </a>
+    <a href="{% url 'bolao:admin_logout' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-sign-out-alt"></i> Sair
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h2 class="admin-title"><i class="fas fa-sitemap"></i> Gerenciar Eliminatórias</h2>
+
+    <p class="section-desc" style="text-align:center; margin-bottom:2rem;">
+        Selecione as equipes classificadas para cada jogo. Após definir, libere a fase no
+        <a href="{% url 'bolao:admin_painel' %}" style="color:var(--primary);">painel principal</a>.
+    </p>
+
+    {% for fase in fases %}
+    <div class="admin-section">
+        <h3><i class="fas fa-layer-group"></i> {{ fase.nome }}</h3>
+        <div class="elim-jogos-list">
+            {% for jogo in fase.jogos %}
+            <div class="elim-jogo-row" data-jogo-id="{{ jogo.id }}">
+                <div class="elim-jogo-info">
+                    <span class="elim-jogo-num">Jogo {{ jogo.numero_jogo }}</span>
+                    <span class="elim-jogo-desc">{{ jogo.descricao }}</span>
+                    <span class="elim-jogo-data">{{ jogo.data_hora|date:"d/m H:i" }}</span>
+                </div>
+                <div class="elim-jogo-selects">
+                    <select class="elim-select elim-casa" data-jogo-id="{{ jogo.id }}">
+                        <option value="">— Casa —</option>
+                    </select>
+                    <span class="elim-vs">vs</span>
+                    <select class="elim-select elim-fora" data-jogo-id="{{ jogo.id }}">
+                        <option value="">— Fora —</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary btn-definir-equipes" data-jogo-id="{{ jogo.id }}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+                {% if jogo.selecao_casa and jogo.selecao_fora %}
+                <div class="elim-atual">
+                    <span class="badge badge-success">
+                        {{ jogo.selecao_casa.bandeira_emoji }} {{ jogo.selecao_casa.nome }}
+                        vs
+                        {{ jogo.selecao_fora.nome }} {{ jogo.selecao_fora.bandeira_emoji }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+const TODAS_SELECOES = {{ todas_selecoes|safe }};
+const DEFINIR_URL = '{% url "bolao:admin_definir_equipes" %}';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Popular selects
+    document.querySelectorAll('.elim-select').forEach(select => {
+        TODAS_SELECOES.forEach(sel => {
+            const opt = document.createElement('option');
+            opt.value = sel.id;
+            opt.textContent = `${sel.bandeira_emoji} ${sel.nome}`;
+            select.appendChild(opt);
+        });
+    });
+
+    // Pré-selecionar equipes já definidas
+    document.querySelectorAll('.elim-jogo-row').forEach(row => {
+        const atual = row.querySelector('.elim-atual .badge');
+        if (atual) {
+            // Já tem equipes definidas - elas estão renderizadas no HTML
+        }
+    });
+
+    // Definir equipes
+    document.querySelectorAll('.btn-definir-equipes').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const jogoId = this.dataset.jogoId;
+            const row = this.closest('.elim-jogo-row');
+            const casaSelect = row.querySelector('.elim-casa');
+            const foraSelect = row.querySelector('.elim-fora');
+
+            const casaId = casaSelect.value;
+            const foraId = foraSelect.value;
+
+            if (!casaId || !foraId) {
+                showToast('Selecione ambas as equipes', 'error');
+                return;
+            }
+
+            if (casaId === foraId) {
+                showToast('As equipes devem ser diferentes', 'error');
+                return;
+            }
+
+            try {
+                const resp = await fetch(DEFINIR_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                    body: JSON.stringify({
+                        jogo_id: parseInt(jogoId),
+                        selecao_casa_id: parseInt(casaId),
+                        selecao_fora_id: parseInt(foraId),
+                    }),
+                });
+                const result = await resp.json();
+                if (resp.ok) {
+                    showToast(result.message, 'success');
+                    this.innerHTML = '<i class="fas fa-check-double"></i>';
+                    this.style.background = 'var(--success)';
+
+                    // Atualizar badge
+                    let badge = row.querySelector('.elim-atual');
+                    const casaNome = casaSelect.options[casaSelect.selectedIndex].textContent;
+                    const foraNome = foraSelect.options[foraSelect.selectedIndex].textContent;
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'elim-atual';
+                        row.appendChild(badge);
+                    }
+                    badge.innerHTML = `<span class="badge badge-success">${casaNome} vs ${foraNome}</span>`;
+                } else {
+                    showToast(result.error, 'error');
+                }
+            } catch (e) {
+                showToast('Erro de conexão', 'error');
+            }
+        });
+    });
+});
+
+function showToast(message, type) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+{% load bolao_filters %}
+
+{% block title %}Palpites Eliminatórias{% endblock %}
+
+{% block header_nav %}
+<div class="nav-links">
+    <a href="{% url 'bolao:palpites' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-arrow-left"></i> Fase de Grupos
+    </a>
+    <a href="{% url 'bolao:home' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <a href="{% url 'bolao:logout' %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-sign-out-alt"></i> Sair
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="palpites-container">
+    <div class="palpites-header">
+        <h2><i class="fas fa-trophy"></i> Palpites — Fases Eliminatórias</h2>
+        <p class="deadline-info">
+            <i class="fas fa-info-circle"></i> Palpite apenas nos jogos com equipes definidas e fase liberada
+        </p>
+    </div>
+
+    {% if not fases_disponiveis %}
+    <div class="empty-state">
+        <i class="fas fa-hourglass-half"></i>
+        <h3>Nenhuma fase disponível ainda</h3>
+        <p>As fases eliminatórias serão liberadas conforme os jogos forem definidos pelo admin.</p>
+    </div>
+    {% endif %}
+
+    {% for fase in fases_disponiveis %}
+    <div class="fase-card" id="fase-{{ fase.codigo }}">
+        <div class="fase-header">
+            <h3>{{ fase.nome }}</h3>
+            {% if fase.aberta %}
+            <span class="badge badge-success"><i class="fas fa-unlock"></i> Aberta</span>
+            {% else %}
+            <span class="badge badge-warning"><i class="fas fa-lock"></i> Fechada</span>
+            {% endif %}
+        </div>
+
+        <div class="jogos-list">
+            {% for jogo in fase.jogos %}
+            <div class="jogo-row" data-jogo-id="{{ jogo.id }}"
+                 data-casa-id="{{ jogo.selecao_casa.id }}" data-fora-id="{{ jogo.selecao_fora.id }}">
+                <div class="jogo-data">
+                    Jogo {{ jogo.numero_jogo }} — {{ jogo.data_hora|date:"d/m H:i" }}
+                </div>
+                    <div class="jogo-times">
+                        <div class="time-casa">
+                            <img src="{% static jogo.selecao_casa|flag_url %}" alt="{{ jogo.selecao_casa.codigo }}" class="bandeira-img">
+                            <span class="time-nome">{{ jogo.selecao_casa.nome }}</span>
+                        </div>
+                    <div class="placar-inputs">
+                        <input type="number" min="0" max="9" class="placar-input gols-casa"
+                               data-jogo="{{ jogo.id }}" data-tipo="casa"
+                               {% if not fase.aberta %}disabled{% endif %}>
+                        <span class="placar-x">×</span>
+                        <input type="number" min="0" max="9" class="placar-input gols-fora"
+                               data-jogo="{{ jogo.id }}" data-tipo="fora"
+                               {% if not fase.aberta %}disabled{% endif %}>
+                    </div>
+                    <div class="time-fora">
+                        <span class="time-nome">{{ jogo.selecao_fora.nome }}</span>
+                        <img src="{% static jogo.selecao_fora|flag_url %}" alt="{{ jogo.selecao_fora.codigo }}" class="bandeira-img">
+                    </div>
+                </div>
+                {% if jogo.resultado_definido %}
+                <div class="resultado-oficial">
+                    <span class="resultado-label">Resultado:</span>
+                    <span class="resultado-placar">{{ jogo.gols_casa }} × {{ jogo.gols_fora }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if fases_disponiveis %}
+    <div class="salvar-section">
+        <button class="btn btn-primary btn-lg" id="btn-salvar-elim">
+            <i class="fas fa-save"></i> Salvar Palpites
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PALPITES_EXISTENTES = {{ palpites_existentes|safe }};
+const CSRF_TOKEN = '{{ csrf_token }}';
+const SALVAR_URL = '{% url "bolao:salvar_palpites_eliminatorias" %}';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar palpites existentes
+    for (const [jogoId, dados] of Object.entries(PALPITES_EXISTENTES)) {
+        const row = document.querySelector(`.jogo-row[data-jogo-id="${jogoId}"]`);
+        if (row) {
+            const casaInput = row.querySelector('.gols-casa');
+            const foraInput = row.querySelector('.gols-fora');
+            if (dados.gols_casa !== null && casaInput) {
+                casaInput.value = dados.gols_casa;
+                casaInput.classList.add('filled');
+            }
+            if (dados.gols_fora !== null && foraInput) {
+                foraInput.value = dados.gols_fora;
+                foraInput.classList.add('filled');
+            }
+        }
+    }
+
+    // Input handlers
+    document.querySelectorAll('.placar-input').forEach(input => {
+        input.addEventListener('input', function() {
+            let val = this.value.replace(/[^0-9]/g, '');
+            if (val.length > 1) val = val.charAt(0);
+            this.value = val;
+            this.classList.toggle('filled', val !== '');
+        });
+        input.addEventListener('focus', function() { this.select(); });
+    });
+
+    // Salvar
+    const btn = document.getElementById('btn-salvar-elim');
+    if (btn) {
+        btn.addEventListener('click', async function() {
+            const palpites = {};
+            document.querySelectorAll('.jogo-row').forEach(row => {
+                const jogoId = row.dataset.jogoId;
+                const casa = row.querySelector('.gols-casa');
+                const fora = row.querySelector('.gols-fora');
+                if (casa && fora && casa.value !== '' && fora.value !== '' && !casa.disabled) {
+                    palpites[jogoId] = {
+                        gols_casa: parseInt(casa.value),
+                        gols_fora: parseInt(fora.value),
+                    };
+                }
+            });
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+            try {
+                const resp = await fetch(SALVAR_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                    body: JSON.stringify({ palpites }),
+                });
+                const result = await resp.json();
+                showToast(result.message || result.error, resp.ok ? 'success' : 'error');
+            } catch (e) {
+                showToast('Erro de conexão', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Palpites';
+        });
+    }
+});
+
+function showToast(message, type) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+}
+</script>
+{% endblock %}
