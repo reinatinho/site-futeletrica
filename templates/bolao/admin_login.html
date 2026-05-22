@@ -14,9 +14,9 @@
         <form method="post" class="login-form">
             {% csrf_token %}
             <div class="form-group">
-                <label for="admin-pin"><i class="fas fa-key"></i> PIN do Admin</label>
-                <input type="password" name="pin" id="admin-pin" class="form-input"
-                       placeholder="Digite o PIN" inputmode="numeric" maxlength="10" required>
+                <label for="admin-senha"><i class="fas fa-key"></i> Senha do Admin</label>
+                <input type="password" name="senha" id="admin-senha" class="form-input"
+                       placeholder="Digite a senha" maxlength="50" required>
             </div>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-unlock"></i> Acessar

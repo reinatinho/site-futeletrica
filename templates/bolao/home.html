@@ -55,7 +55,7 @@
             <span>Eliminatórias</span>
         </a>
         {% endif %}
-        {% if config.palpites_publicos %}
+        {% if config.publico_fase_grupos or config.publico_16avos or config.publico_oitavas or config.publico_quartas or config.publico_semi or config.publico_terceiro or config.publico_final %}
         <a href="{% url 'bolao:publico' %}" class="nav-card">
             <i class="fas fa-users"></i>
             <span>Palpites Públicos</span>

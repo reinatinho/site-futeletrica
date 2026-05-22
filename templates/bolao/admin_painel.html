@@ -35,15 +35,16 @@
         </div>
     </div>
 
-    <!-- Configurações / Flags -->
+    <!-- Fases Abertas para Palpites -->
     <div class="admin-section">
-        <h3><i class="fas fa-sliders-h"></i> Configurações</h3>
+        <h3><i class="fas fa-sliders-h"></i> Fases Abertas para Palpites</h3>
+        <p class="section-desc">Habilite as fases para que os participantes possam enviar palpites.</p>
         <div class="config-grid">
             <label class="config-toggle">
                 <input type="checkbox" class="config-check" data-campo="fase_grupos_aberta"
                        {% if config.fase_grupos_aberta %}checked{% endif %}>
                 <span class="toggle-slider"></span>
-                <span class="toggle-label">Fase de Grupos Aberta</span>
+                <span class="toggle-label">Fase de Grupos</span>
             </label>
             <label class="config-toggle">
                 <input type="checkbox" class="config-check" data-campo="fase_16avos_aberta"
@@ -81,15 +82,95 @@
                 <span class="toggle-slider"></span>
                 <span class="toggle-label">Final</span>
             </label>
+        </div>
+    </div>
+
+    <!-- Cadeado por fase -->
+    <div class="admin-section">
+        <h3><i class="fas fa-lock"></i> Cadeado por Fase</h3>
+        <p class="section-desc">Quando ativado, nenhum participante poderá enviar ou editar palpites da fase.</p>
+        <div class="config-grid">
             <label class="config-toggle">
-                <input type="checkbox" class="config-check" data-campo="palpites_publicos"
-                       {% if config.palpites_publicos %}checked{% endif %}>
-                <span class="toggle-slider"></span>
-                <span class="toggle-label">Palpites Públicos</span>
+                <input type="checkbox" class="config-check" data-campo="lock_fase_grupos" {% if config.lock_fase_grupos %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> Fase de Grupos</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="lock_16avos" {% if config.lock_16avos %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> 16-avos de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="lock_oitavas" {% if config.lock_oitavas %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> Oitavas de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="lock_quartas" {% if config.lock_quartas %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> Quartas de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="lock_semi" {% if config.lock_semi %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> Semifinais</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="lock_terceiro" {% if config.lock_terceiro %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> Disputa 3º Lugar</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="lock_final" {% if config.lock_final %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-lock"></span>
+                <span class="toggle-label"><i class="fas fa-lock" style="margin-right:4px;"></i> Final</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Tornar Público por Fase -->
+    <div class="admin-section">
+        <h3><i class="fas fa-eye"></i> Tornar Palpites Públicos</h3>
+        <p class="section-desc">Libere a visualização pública dos palpites por fase.</p>
+        <div class="config-grid">
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_fase_grupos" {% if config.publico_fase_grupos %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> Fase de Grupos</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_16avos" {% if config.publico_16avos %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> 16-avos de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_oitavas" {% if config.publico_oitavas %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> Oitavas de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_quartas" {% if config.publico_quartas %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> Quartas de Final</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_semi" {% if config.publico_semi %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> Semifinais</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_terceiro" {% if config.publico_terceiro %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> Disputa 3º Lugar</span>
+            </label>
+            <label class="config-toggle">
+                <input type="checkbox" class="config-check" data-campo="publico_final" {% if config.publico_final %}checked{% endif %}>
+                <span class="toggle-slider toggle-slider-publico"></span>
+                <span class="toggle-label"><i class="fas fa-eye" style="margin-right:4px;"></i> Final</span>
             </label>
         </div>
         <button class="btn btn-primary btn-sm" id="btn-salvar-config" style="margin-top: 1rem;">
-            <i class="fas fa-save"></i> Salvar Configurações
+            <i class="fas fa-save"></i> Salvar Todas as Configurações
         </button>
     </div>
 
@@ -138,9 +219,9 @@
         </a>
     </div>
 
-    <!-- Resultados -->
+    <!-- Resultados Fase de Grupos -->
     <div class="admin-section">
-        <h3><i class="fas fa-futbol"></i> Inserir Resultados</h3>
+        <h3><i class="fas fa-futbol"></i> Resultados — Fase de Grupos</h3>
         <p class="section-desc">Insira os resultados oficiais dos jogos para calcular a pontuação.</p>
 
         {% for grupo in grupos %}
@@ -175,6 +256,46 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Resultados Eliminatórias -->
+    {% if fases_elim %}
+    <div class="admin-section">
+        <h3><i class="fas fa-trophy"></i> Resultados — Fases Eliminatórias</h3>
+        <p class="section-desc">Insira os resultados oficiais dos jogos eliminatórios.</p>
+
+        {% for fase in fases_elim %}
+        <div class="resultado-grupo">
+            <h4 class="resultado-grupo-titulo">{{ fase.nome }}</h4>
+            <div class="resultados-list">
+                {% for jogo in fase.jogos %}
+                <div class="resultado-row" data-jogo-id="{{ jogo.id }}">
+                    <div class="resultado-info">
+                        <span class="resultado-data">Jogo {{ jogo.numero_jogo }} — {{ jogo.data_hora|date:"d/m H:i" }}</span>
+                        <span class="resultado-times">
+                            <img src="{% static jogo.selecao_casa|flag_url %}" alt="" class="bandeira-img-sm"> {{ jogo.selecao_casa.nome }}
+                            <span class="vs">vs</span>
+                            {{ jogo.selecao_fora.nome }} <img src="{% static jogo.selecao_fora|flag_url %}" alt="" class="bandeira-img-sm">
+                        </span>
+                    </div>
+                    <div class="resultado-inputs">
+                        <input type="number" min="0" max="20" class="resultado-input resultado-casa"
+                               value="{% if jogo.gols_casa is not None %}{{ jogo.gols_casa }}{% endif %}"
+                               placeholder="-">
+                        <span class="resultado-x">×</span>
+                        <input type="number" min="0" max="20" class="resultado-input resultado-fora"
+                               value="{% if jogo.gols_fora is not None %}{{ jogo.gols_fora }}{% endif %}"
+                               placeholder="-">
+                        <button class="btn btn-sm btn-primary btn-salvar-resultado" data-jogo-id="{{ jogo.id }}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -185,12 +306,10 @@ const SALVAR_CONFIG_URL = '{% url "bolao:admin_salvar_config" %}';
 const SALVAR_RESULTADO_URL = '{% url "bolao:admin_salvar_resultado" %}';
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Salvar config
     document.getElementById('btn-salvar-config').addEventListener('click', async function() {
         const checks = document.querySelectorAll('.config-check');
         const data = {};
         checks.forEach(c => { data[c.dataset.campo] = c.checked; });
-
         try {
             const resp = await fetch(SALVAR_CONFIG_URL, {
                 method: 'POST',
@@ -199,24 +318,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const result = await resp.json();
             showToast(result.message || 'Salvo!', resp.ok ? 'success' : 'error');
-        } catch (e) {
-            showToast('Erro de conexão', 'error');
-        }
+        } catch (e) { showToast('Erro de conexão', 'error'); }
     });
 
-    // Salvar resultados
     document.querySelectorAll('.btn-salvar-resultado').forEach(btn => {
         btn.addEventListener('click', async function() {
             const jogoId = this.dataset.jogoId;
             const row = this.closest('.resultado-row');
             const casa = row.querySelector('.resultado-casa').value;
             const fora = row.querySelector('.resultado-fora').value;
-
-            if (casa === '' || fora === '') {
-                showToast('Preencha ambos os placares', 'error');
-                return;
-            }
-
+            if (casa === '' || fora === '') { showToast('Preencha ambos os placares', 'error'); return; }
             try {
                 const resp = await fetch(SALVAR_RESULTADO_URL, {
                     method: 'POST',
@@ -228,12 +339,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(result.message, 'success');
                     this.innerHTML = '<i class="fas fa-check-double"></i>';
                     this.style.background = 'var(--success)';
-                } else {
-                    showToast(result.error, 'error');
-                }
-            } catch (e) {
-                showToast('Erro de conexão', 'error');
-            }
+                } else { showToast(result.error, 'error'); }
+            } catch (e) { showToast('Erro de conexão', 'error'); }
         });
     });
 });

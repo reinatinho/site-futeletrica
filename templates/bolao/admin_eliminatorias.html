@@ -1,5 +1,6 @@
 {% extends 'bolao/base_bolao.html' %}
 {% load static %}
+{% load bolao_filters %}
 
 {% block title %}Admin — Eliminatórias{% endblock %}
 
@@ -49,9 +50,11 @@
                 {% if jogo.selecao_casa and jogo.selecao_fora %}
                 <div class="elim-atual">
                     <span class="badge badge-success">
-                        {{ jogo.selecao_casa.bandeira_emoji }} {{ jogo.selecao_casa.nome }}
+                        <img src="{% static jogo.selecao_casa|flag_url %}" class="bandeira-img-sm" alt="{{ jogo.selecao_casa.codigo }}">
+                        {{ jogo.selecao_casa.nome }}
                         vs
-                        {{ jogo.selecao_fora.nome }} {{ jogo.selecao_fora.bandeira_emoji }}
+                        {{ jogo.selecao_fora.nome }}
+                        <img src="{% static jogo.selecao_fora|flag_url %}" class="bandeira-img-sm" alt="{{ jogo.selecao_fora.codigo }}">
                     </span>
                 </div>
                 {% endif %}
@@ -70,80 +73,96 @@ const TODAS_SELECOES = {{ todas_selecoes|safe }};
 const DEFINIR_URL = '{% url "bolao:admin_definir_equipes" %}';
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Popular selects
     document.querySelectorAll('.elim-select').forEach(select => {
         TODAS_SELECOES.forEach(sel => {
             const opt = document.createElement('option');
             opt.value = sel.id;
             opt.textContent = `${sel.bandeira_emoji} ${sel.nome}`;
+            opt.dataset.codigo = sel.codigo ? sel.codigo.toLowerCase() : '';
             select.appendChild(opt);
         });
+        wrapElimSelectWithFlags(select);
     });
 
-    // Pré-selecionar equipes já definidas
-    document.querySelectorAll('.elim-jogo-row').forEach(row => {
-        const atual = row.querySelector('.elim-atual .badge');
-        if (atual) {
-            // Já tem equipes definidas - elas estão renderizadas no HTML
-        }
-    });
-
-    // Definir equipes
     document.querySelectorAll('.btn-definir-equipes').forEach(btn => {
         btn.addEventListener('click', async function() {
             const jogoId = this.dataset.jogoId;
             const row = this.closest('.elim-jogo-row');
             const casaSelect = row.querySelector('.elim-casa');
             const foraSelect = row.querySelector('.elim-fora');
-
             const casaId = casaSelect.value;
             const foraId = foraSelect.value;
 
-            if (!casaId || !foraId) {
-                showToast('Selecione ambas as equipes', 'error');
-                return;
-            }
-
-            if (casaId === foraId) {
-                showToast('As equipes devem ser diferentes', 'error');
-                return;
-            }
+            if (!casaId || !foraId) { showToast('Selecione ambas as equipes', 'error'); return; }
+            if (casaId === foraId) { showToast('As equipes devem ser diferentes', 'error'); return; }
 
             try {
                 const resp = await fetch(DEFINIR_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-                    body: JSON.stringify({
-                        jogo_id: parseInt(jogoId),
-                        selecao_casa_id: parseInt(casaId),
-                        selecao_fora_id: parseInt(foraId),
-                    }),
+                    body: JSON.stringify({ jogo_id: parseInt(jogoId), selecao_casa_id: parseInt(casaId), selecao_fora_id: parseInt(foraId) }),
                 });
                 const result = await resp.json();
                 if (resp.ok) {
                     showToast(result.message, 'success');
                     this.innerHTML = '<i class="fas fa-check-double"></i>';
                     this.style.background = 'var(--success)';
-
-                    // Atualizar badge
                     let badge = row.querySelector('.elim-atual');
-                    const casaNome = casaSelect.options[casaSelect.selectedIndex].textContent;
-                    const foraNome = foraSelect.options[foraSelect.selectedIndex].textContent;
-                    if (!badge) {
-                        badge = document.createElement('div');
-                        badge.className = 'elim-atual';
-                        row.appendChild(badge);
-                    }
-                    badge.innerHTML = `<span class="badge badge-success">${casaNome} vs ${foraNome}</span>`;
+                    const casaSel = TODAS_SELECOES.find(s => s.id == casaId);
+                    const foraSel = TODAS_SELECOES.find(s => s.id == foraId);
+                    const casaCod = casaSel ? casaSel.codigo.toLowerCase() : '';
+                    const foraCod = foraSel ? foraSel.codigo.toLowerCase() : '';
+                    if (!badge) { badge = document.createElement('div'); badge.className = 'elim-atual'; row.appendChild(badge); }
+                    badge.innerHTML = `<span class="badge badge-success"><img src="/static/images/flags/${casaCod}.png" class="bandeira-img-sm"> ${casaSel.nome} vs ${foraSel.nome} <img src="/static/images/flags/${foraCod}.png" class="bandeira-img-sm"></span>`;
                 } else {
                     showToast(result.error, 'error');
                 }
-            } catch (e) {
-                showToast('Erro de conexão', 'error');
-            }
+            } catch (e) { showToast('Erro de conexão', 'error'); }
         });
     });
 });
+
+function wrapElimSelectWithFlags(select) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    const display = document.createElement('div');
+    display.className = 'custom-select-display';
+    display.innerHTML = '<span class="csd-placeholder">' + select.options[0].text + '</span>';
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown';
+
+    TODAS_SELECOES.forEach(sel => {
+        const item = document.createElement('div');
+        item.className = 'custom-select-item';
+        item.dataset.value = sel.id;
+        const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
+        item.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+        item.addEventListener('click', () => {
+            select.value = sel.id;
+            select.dispatchEvent(new Event('change'));
+            display.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
+            dropdown.classList.remove('open');
+            wrapper.classList.remove('open');
+        });
+        dropdown.appendChild(item);
+    });
+
+    display.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+            if (w !== wrapper) { w.classList.remove('open'); w.querySelector('.custom-select-dropdown').classList.remove('open'); }
+        });
+        dropdown.classList.toggle('open');
+        wrapper.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => { dropdown.classList.remove('open'); wrapper.classList.remove('open'); });
+
+    select.style.display = 'none';
+    select.parentElement.insertBefore(wrapper, select);
+    wrapper.appendChild(display);
+    wrapper.appendChild(dropdown);
+}
 
 function showToast(message, type) {
     const existing = document.querySelector('.toast');
