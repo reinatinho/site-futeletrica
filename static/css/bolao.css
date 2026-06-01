@@ -443,6 +443,51 @@ body {
     border-top: 1px solid var(--border);
 }
 
+/* ===== Pagamento PIX ===== */
+.pix-pagamento {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0 1.5rem;
+}
+
+.pix-qrcode {
+    width: 200px;
+    height: 200px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    box-shadow: var(--shadow);
+}
+
+.pix-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.pix-copia-cola {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    align-items: stretch;
+}
+
+.pix-codigo-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: text;
+}
+
+.pix-copia-cola .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 /* ===== PALPITES PAGE ===== */
 .palpites-container {
     max-width: 1200px;
@@ -1913,4 +1958,326 @@ body {
 
 .jogo-row-elim:last-child {
     border-bottom: none;
+}
+
+/* ===== Busca no custom select ===== */
+.custom-select-search {
+    width: calc(100% - 1rem);
+    margin: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    position: sticky;
+    top: 0;
+}
+
+.custom-select-search:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.custom-select-items {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ===== Progresso por fase (admin) ===== */
+.fases-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.fase-chip {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.fase-chip strong {
+    color: var(--text);
+}
+
+.fase-chip-completo {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.fase-chip-completo strong {
+    color: var(--success);
+}
+
+.fase-chip-vazio {
+    opacity: 0.45;
+}
+
+/* ===== Classificação oficial (admin) ===== */
+.class-oficial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.class-oficial-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+}
+
+.class-oficial-posicoes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.class-oficial-pos {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.class-oficial-pos label {
+    width: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.85rem;
+}
+
+.class-oficial-select,
+.classif-select {
+    flex: 1;
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.class-oficial-select:focus,
+.classif-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.class-oficial-select option,
+.classif-select option {
+    background: var(--bg-dark);
+}
+
+.extras-oficiais-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+/* ===== Modal PIN ===== */
+.pin-info-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pin-info-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.pin-codigo {
+    font-size: 1.6rem;
+    letter-spacing: 0.4rem;
+    color: var(--primary);
+    font-weight: 900;
+}
+
+/* ===== Meu palpite de classificação (palpites) ===== */
+.meu-palpite-classif {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+}
+
+.meu-palpite-classif h4 {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.meu-palpite-classif h4 small,
+.classificacao-grupo h4 small {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 0.75rem;
+}
+
+.classif-posicoes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+}
+
+.classif-pos {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.classif-pos label {
+    width: 26px;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* ===== Regras (home) ===== */
+.regras-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.regras-titulo {
+    color: var(--primary);
+    margin-bottom: 1.25rem;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.regras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.regra-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+}
+
+.regra-pontos {
+    display: inline-block;
+    background: var(--primary);
+    color: #000;
+    font-weight: 900;
+    font-size: 0.85rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    margin-bottom: 0.6rem;
+}
+
+.regra-card h4 {
+    color: var(--text);
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.regra-card p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.regra-exemplo {
+    background: var(--bg-dark);
+    border-left: 3px solid var(--primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.78rem !important;
+    color: var(--text-dim) !important;
+    margin-bottom: 0 !important;
+}
+
+.regras-lista {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.regras-lista li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.regras-lista li i {
+    color: var(--primary);
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+}
+
+.regras-lista strong {
+    color: var(--text);
+}
+
+/* ===== Classificação/Extras no público ===== */
+.publico-classif {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+}
+
+.publico-classif-titulo {
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+.publico-classif-item {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.15rem 0.6rem;
+    white-space: nowrap;
+}
+
+.publico-classif-item strong {
+    color: var(--primary);
+}
+
+.publico-extras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+}
+
+@media (max-width: 768px) {
+    .classif-posicoes {
+        grid-template-columns: 1fr;
+    }
 }

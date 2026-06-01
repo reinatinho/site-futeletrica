@@ -5,6 +5,16 @@ document.addEventListener('DOMContentLoaded', function() {
     loadExistingData();
 });
 
+function focusProximoInput(atual) {
+    const allInputs = Array.from(document.querySelectorAll('.placar-input:not([disabled])'));
+    const idx = allInputs.indexOf(atual);
+    if (idx > -1 && idx < allInputs.length - 1) {
+        const proximo = allInputs[idx + 1];
+        proximo.focus();
+        proximo.select();
+    }
+}
+
 function initPalpites() {
     const inputs = document.querySelectorAll('.placar-input');
     inputs.forEach(input => {
@@ -23,17 +33,17 @@ function initPalpites() {
             const grupo = this.closest('.jogo-row').dataset.grupo;
             updateClassificacao(grupo);
             updateGrupoStatus(grupo);
+
+            // Ao digitar um dígito (0-9), pula automaticamente para o próximo campo
+            if (val !== '') {
+                focusProximoInput(this);
+            }
         });
 
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Tab' || e.key === 'Enter') {
                 e.preventDefault();
-                const allInputs = Array.from(document.querySelectorAll('.placar-input:not([disabled])'));
-                const idx = allInputs.indexOf(this);
-                if (idx < allInputs.length - 1) {
-                    allInputs[idx + 1].focus();
-                    allInputs[idx + 1].select();
-                }
+                focusProximoInput(this);
             }
         });
 
@@ -71,11 +81,22 @@ function wrapSelectWithFlags(select) {
     const dropdown = document.createElement('div');
     dropdown.className = 'custom-select-dropdown';
 
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.className = 'custom-select-search';
+    search.placeholder = 'Buscar seleção...';
+    dropdown.appendChild(search);
+
+    const itemsBox = document.createElement('div');
+    itemsBox.className = 'custom-select-items';
+    dropdown.appendChild(itemsBox);
+
     const sorted = [...TODAS_SELECOES].sort((a, b) => a.nome.localeCompare(b.nome));
     sorted.forEach(sel => {
         const item = document.createElement('div');
         item.className = 'custom-select-item';
         item.dataset.value = sel.id;
+        item.dataset.nome = sel.nome.toLowerCase();
         const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
         item.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
         item.addEventListener('click', () => {
@@ -85,16 +106,26 @@ function wrapSelectWithFlags(select) {
             dropdown.classList.remove('open');
             wrapper.classList.remove('open');
         });
-        dropdown.appendChild(item);
+        itemsBox.appendChild(item);
     });
+
+    search.addEventListener('input', function() {
+        const termo = this.value.toLowerCase().trim();
+        itemsBox.querySelectorAll('.custom-select-item').forEach(it => {
+            it.style.display = it.dataset.nome.includes(termo) ? '' : 'none';
+        });
+    });
+    search.addEventListener('click', e => e.stopPropagation());
 
     display.addEventListener('click', (e) => {
         e.stopPropagation();
         document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
             if (w !== wrapper) { w.classList.remove('open'); w.querySelector('.custom-select-dropdown').classList.remove('open'); }
         });
+        const willOpen = !dropdown.classList.contains('open');
         dropdown.classList.toggle('open');
         wrapper.classList.toggle('open');
+        if (willOpen) { search.value = ''; search.dispatchEvent(new Event('input')); setTimeout(() => search.focus(), 50); }
     });
 
     document.addEventListener('click', () => {
@@ -163,16 +194,35 @@ function loadExistingData() {
         updateGrupoStatus(grupo);
     });
 
-    // Estrelas de classificação existentes
+    // Palpites de classificação existentes (1º ao 4º por grupo)
     for (const [grupoId, posicoes] of Object.entries(CLASSIFICACOES_EXISTENTES)) {
-        if (posicoes['1']) {
-            const btn = document.querySelector(`.btn-estrela[data-selecao="${posicoes['1']}"][data-grupo="${grupoId}"]`);
-            if (btn) {
-                btn.classList.add('active');
-                btn.querySelector('i').className = 'fas fa-star';
+        for (const [posicao, selecaoId] of Object.entries(posicoes)) {
+            const select = document.querySelector(`.classif-select[data-grupo="${grupoId}"][data-posicao="${posicao}"]`);
+            if (select && selecaoId) {
+                select.value = selecaoId;
             }
         }
     }
+
+    initClassifSelects();
+}
+
+function initClassifSelects() {
+    // Impede que a mesma seleção seja escolhida em mais de uma posição do grupo
+    document.querySelectorAll('.meu-palpite-classif').forEach(box => {
+        const selects = box.querySelectorAll('.classif-select');
+        function atualizarOpcoes() {
+            const escolhidos = Array.from(selects).map(s => s.value).filter(v => v);
+            selects.forEach(sel => {
+                Array.from(sel.options).forEach(opt => {
+                    if (!opt.value) return;
+                    opt.disabled = escolhidos.includes(opt.value) && sel.value !== opt.value;
+                });
+            });
+        }
+        selects.forEach(sel => sel.addEventListener('change', atualizarOpcoes));
+        atualizarOpcoes();
+    });
 }
 
 function updateClassificacao(grupoLetra) {
@@ -236,10 +286,7 @@ function updateClassificacao(grupoLetra) {
         return 0;
     });
 
-    // Verificar empate no topo
-    const hasTopTie = sorted.length >= 2 && sorted[0].pts === sorted[1].pts && sorted[0].pts > 0;
-
-    // Atualizar tabela
+    // Atualizar tabela (apenas simulação visual, não define o palpite)
     sorted.forEach((s, idx) => {
         const row = tabela.querySelector(`tr[data-selecao-id="${s.id}"]`);
         if (!row) return;
@@ -255,36 +302,6 @@ function updateClassificacao(grupoLetra) {
 
         // Reordenar visualmente
         tabela.appendChild(row);
-
-        // Estrelas
-        const estrelaBtn = row.querySelector('.btn-estrela');
-        if (idx === 0 && !hasTopTie) {
-            estrelaBtn.classList.add('active');
-            estrelaBtn.querySelector('i').className = 'fas fa-star';
-            estrelaBtn.style.pointerEvents = 'none';
-        } else if (hasTopTie && (idx === 0 || idx === 1)) {
-            estrelaBtn.style.pointerEvents = 'auto';
-            if (!estrelaBtn.classList.contains('active')) {
-                estrelaBtn.querySelector('i').className = 'far fa-star';
-            }
-        } else {
-            estrelaBtn.classList.remove('active');
-            estrelaBtn.querySelector('i').className = 'far fa-star';
-            estrelaBtn.style.pointerEvents = 'none';
-        }
-    });
-
-    // Estrela click handlers
-    const estrelas = grupoCard.querySelectorAll('.btn-estrela');
-    estrelas.forEach(btn => {
-        btn.onclick = function() {
-            estrelas.forEach(b => {
-                b.classList.remove('active');
-                b.querySelector('i').className = 'far fa-star';
-            });
-            this.classList.add('active');
-            this.querySelector('i').className = 'fas fa-star';
-        };
     });
 }
 
@@ -418,6 +435,15 @@ function loadRascunho() {
                 }
             }
         }
+        if (data.classificacoes) {
+            for (const [grupoId, posicoes] of Object.entries(data.classificacoes)) {
+                for (const [posicao, selecaoId] of Object.entries(posicoes)) {
+                    const select = document.querySelector(`.classif-select[data-grupo="${grupoId}"][data-posicao="${posicao}"]`);
+                    if (select && selecaoId) select.value = selecaoId;
+                }
+            }
+            initClassifSelects();
+        }
         updateRascunhoInfo();
     } catch (e) {}
 }
@@ -443,7 +469,18 @@ function collectDataParcial() {
         }
     });
 
-    return { palpites, extras };
+    const classificacoes = {};
+    document.querySelectorAll('.meu-palpite-classif').forEach(box => {
+        const grupoId = box.dataset.grupoId;
+        box.querySelectorAll('.classif-select').forEach(sel => {
+            if (sel.value) {
+                if (!classificacoes[grupoId]) classificacoes[grupoId] = {};
+                classificacoes[grupoId][sel.dataset.posicao] = parseInt(sel.value);
+            }
+        });
+    });
+
+    return { palpites, extras, classificacoes };
 }
 
 function limparRascunhoLocal() {
@@ -493,6 +530,20 @@ function validateAll() {
         return { valid: false, message: msg };
     }
 
+    // Classificação: todas as 4 posições de cada grupo devem estar preenchidas
+    const gruposIncompletos = [];
+    document.querySelectorAll('.meu-palpite-classif').forEach(box => {
+        const selects = box.querySelectorAll('.classif-select');
+        const preenchidos = Array.from(selects).filter(s => s.value).length;
+        if (preenchidos < selects.length) {
+            const titulo = box.closest('.grupo-card')?.querySelector('.grupo-header h3')?.textContent.trim() || 'Grupo';
+            gruposIncompletos.push(titulo);
+        }
+    });
+    if (gruposIncompletos.length > 0) {
+        return { valid: false, message: `Defina a classificação (1º ao 4º) de: ${gruposIncompletos.join(', ')}.` };
+    }
+
     if (extrasVazios.length > 0) {
         return { valid: false, message: `Selecione todos os palpites especiais (campeão, vice, 3º, pior).` };
     }
@@ -518,37 +569,16 @@ function collectData() {
         }
     });
 
-    // Classificações (estrela = 1º lugar)
-    document.querySelectorAll('.grupo-card').forEach(card => {
-        const grupoLetra = card.id.replace('grupo-', '');
-        const tabela = card.querySelector('.tabela-classificacao tbody');
-        if (!tabela) return;
-
-        const rows = tabela.querySelectorAll('tr');
-        const grupoId = card.querySelector('.btn-estrela')?.dataset.grupo;
+    // Classificações: posições 1º a 4º escolhidas manualmente em cada grupo
+    document.querySelectorAll('.meu-palpite-classif').forEach(box => {
+        const grupoId = box.dataset.grupoId;
         if (!grupoId) return;
-
-        classificacoes[grupoId] = {};
-        rows.forEach((row, idx) => {
-            classificacoes[grupoId][idx + 1] = parseInt(row.dataset.selecaoId);
-        });
-
-        // Override 1st position with starred selection
-        const activeEstrela = card.querySelector('.btn-estrela.active');
-        if (activeEstrela) {
-            const starredId = parseInt(activeEstrela.dataset.selecao);
-            const currentFirst = classificacoes[grupoId][1];
-            if (starredId !== currentFirst) {
-                // Find the position of starred selection and swap
-                for (let pos = 1; pos <= 4; pos++) {
-                    if (classificacoes[grupoId][pos] === starredId) {
-                        classificacoes[grupoId][pos] = currentFirst;
-                        break;
-                    }
-                }
-                classificacoes[grupoId][1] = starredId;
+        box.querySelectorAll('.classif-select').forEach(sel => {
+            if (sel.value) {
+                if (!classificacoes[grupoId]) classificacoes[grupoId] = {};
+                classificacoes[grupoId][sel.dataset.posicao] = parseInt(sel.value);
             }
-        }
+        });
     });
 
     // Extras
