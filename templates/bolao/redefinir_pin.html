@@ -1,0 +1,44 @@
+{% extends 'bolao/base_bolao.html' %}
+{% load static %}
+
+{% block title %}Redefinir PIN{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="{% static 'images/logo.png' %}" alt="Fut Elétrica" class="login-logo">
+            <h2>Redefinir PIN</h2>
+            <p class="login-subtitle">
+                Olá, <strong>{{ participante.nome }}</strong>! Você acessou com um PIN temporário.
+                Escolha agora um novo PIN de 4 dígitos.
+            </p>
+        </div>
+
+        {% if erro %}
+        <div class="alert alert-error" style="margin-bottom: 1rem;">
+            <i class="fas fa-exclamation-circle"></i> {{ erro }}
+        </div>
+        {% endif %}
+
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_pin"><i class="fas fa-lock"></i> Novo PIN (4 dígitos)</label>
+                <input type="password" name="pin" id="id_pin" class="form-input"
+                       inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+                       placeholder="Novo PIN" autocomplete="new-password" required>
+            </div>
+            <div class="form-group">
+                <label for="id_pin_confirma"><i class="fas fa-lock"></i> Confirme o novo PIN</label>
+                <input type="password" name="pin_confirma" id="id_pin_confirma" class="form-input"
+                       inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+                       placeholder="Confirme o PIN" autocomplete="new-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> Salvar Novo PIN
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

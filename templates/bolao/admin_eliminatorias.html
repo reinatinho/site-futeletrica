@@ -131,10 +131,21 @@ function wrapElimSelectWithFlags(select) {
     const dropdown = document.createElement('div');
     dropdown.className = 'custom-select-dropdown';
 
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.className = 'custom-select-search';
+    search.placeholder = 'Buscar seleção...';
+    dropdown.appendChild(search);
+
+    const itemsBox = document.createElement('div');
+    itemsBox.className = 'custom-select-items';
+    dropdown.appendChild(itemsBox);
+
     TODAS_SELECOES.forEach(sel => {
         const item = document.createElement('div');
         item.className = 'custom-select-item';
         item.dataset.value = sel.id;
+        item.dataset.nome = sel.nome.toLowerCase();
         const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
         item.innerHTML = `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}"> ${sel.nome}`;
         item.addEventListener('click', () => {
@@ -144,16 +155,26 @@ function wrapElimSelectWithFlags(select) {
             dropdown.classList.remove('open');
             wrapper.classList.remove('open');
         });
-        dropdown.appendChild(item);
+        itemsBox.appendChild(item);
     });
+
+    search.addEventListener('input', function() {
+        const termo = this.value.toLowerCase().trim();
+        itemsBox.querySelectorAll('.custom-select-item').forEach(it => {
+            it.style.display = it.dataset.nome.includes(termo) ? '' : 'none';
+        });
+    });
+    search.addEventListener('click', e => e.stopPropagation());
 
     display.addEventListener('click', (e) => {
         e.stopPropagation();
         document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
             if (w !== wrapper) { w.classList.remove('open'); w.querySelector('.custom-select-dropdown').classList.remove('open'); }
         });
+        const willOpen = !dropdown.classList.contains('open');
         dropdown.classList.toggle('open');
         wrapper.classList.toggle('open');
+        if (willOpen) { search.value = ''; search.dispatchEvent(new Event('input')); setTimeout(() => search.focus(), 50); }
     });
 
     document.addEventListener('click', () => { dropdown.classList.remove('open'); wrapper.classList.remove('open'); });

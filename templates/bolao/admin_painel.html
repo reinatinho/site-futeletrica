@@ -177,14 +177,16 @@
     <!-- Participantes -->
     <div class="admin-section">
         <h3><i class="fas fa-users"></i> Participantes</h3>
+        <p class="section-desc">Progresso dos palpites dividido por fase. A coluna de status considera a Fase de Grupos.</p>
         <div class="participantes-table-wrapper">
             <table class="admin-table">
                 <thead>
                     <tr>
                         <th>Nome</th>
                         <th>Usuário</th>
-                        <th>Palpites</th>
-                        <th>Status</th>
+                        <th>Progresso por Fase</th>
+                        <th>Grupos</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -193,17 +195,31 @@
                         <td>{{ item.participante.nome_completo }}</td>
                         <td class="text-muted">{{ item.participante.username }}</td>
                         <td>
+                            <div class="fases-chips">
+                                {% for fase in item.fases_progresso %}
+                                <span class="fase-chip {% if fase.completo %}fase-chip-completo{% elif fase.total == 0 %}fase-chip-vazio{% endif %}"
+                                      title="{{ fase.nome }}: {{ fase.feito }}/{{ fase.total }}">
+                                    {{ fase.nome }} <strong>{{ fase.feito }}/{{ fase.total }}</strong>
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td style="min-width:120px;">
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: {{ item.percentual }}%"></div>
                             </div>
-                            <span class="progress-text">{{ item.palpites_feitos }}/{{ item.total_esperado }}</span>
-                        </td>
-                        <td>
                             {% if item.completo %}
                             <span class="badge badge-success"><i class="fas fa-check"></i> Completo</span>
                             {% else %}
                             <span class="badge badge-warning"><i class="fas fa-clock"></i> Pendente</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline btn-gerar-pin"
+                                    data-participante-id="{{ item.participante.id }}"
+                                    data-nome="{{ item.participante.nome_completo }}">
+                                <i class="fas fa-key"></i> Gerar PIN
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -257,6 +273,90 @@
         {% endfor %}
     </div>
 
+    <!-- Classificação Oficial dos Grupos -->
+    <div class="admin-section">
+        <h3><i class="fas fa-list-ol"></i> Classificação Oficial dos Grupos</h3>
+        <p class="section-desc">
+            Defina a posição final oficial (1º a 4º) de cada grupo, seguindo os critérios de desempate.
+            Isso contabiliza os palpites de classificação (8, 6, 4 e 2 pontos).
+        </p>
+        <div class="class-oficial-grid">
+            {% for grupo in grupos %}
+            <div class="class-oficial-card" data-grupo-id="{{ grupo.id }}">
+                <h4 class="resultado-grupo-titulo">Grupo {{ grupo.letra }}</h4>
+                <div class="class-oficial-posicoes">
+                    {% for pos in "1234" %}
+                    <div class="class-oficial-pos">
+                        <label>{{ forloop.counter }}º</label>
+                        <select class="class-oficial-select" data-grupo-id="{{ grupo.id }}" data-posicao="{{ forloop.counter }}">
+                            <option value="">— Selecione —</option>
+                            {% for selecao in grupo.selecoes.all %}
+                            <option value="{{ selecao.id }}">{{ selecao.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-sm btn-primary btn-salvar-classificacao" data-grupo-id="{{ grupo.id }}">
+                    <i class="fas fa-check"></i> Salvar Grupo {{ grupo.letra }}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Resultado dos Palpites Especiais -->
+    <div class="admin-section">
+        <h3><i class="fas fa-medal"></i> Resultado dos Palpites Especiais</h3>
+        <p class="section-desc">
+            Defina campeão, vice, terceiro e pior seleção oficiais. Cada acerto vale 20 pontos.
+        </p>
+        <div class="extras-oficiais-grid">
+            <div class="extra-card">
+                <label><i class="fas fa-trophy" style="color: gold;"></i> Campeão</label>
+                <select class="extra-oficial-select" data-tipo="campeao"><option value="">Selecione...</option></select>
+            </div>
+            <div class="extra-card">
+                <label><i class="fas fa-medal" style="color: silver;"></i> Vice-Campeão</label>
+                <select class="extra-oficial-select" data-tipo="vice"><option value="">Selecione...</option></select>
+            </div>
+            <div class="extra-card">
+                <label><i class="fas fa-medal" style="color: #cd7f32;"></i> Terceiro Colocado</label>
+                <select class="extra-oficial-select" data-tipo="terceiro"><option value="">Selecione...</option></select>
+            </div>
+            <div class="extra-card">
+                <label><i class="fas fa-thumbs-down"></i> Pior Seleção</label>
+                <select class="extra-oficial-select" data-tipo="pior"><option value="">Selecione...</option></select>
+            </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-salvar-extras" style="margin-top: 1rem;">
+            <i class="fas fa-save"></i> Salvar Resultados Especiais
+        </button>
+    </div>
+
+    <!-- Modal PIN temporário -->
+    <div class="modal-overlay" id="pin-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <i class="fas fa-key modal-icon-success" style="color: var(--primary);"></i>
+                <h3>PIN Temporário Gerado</h3>
+            </div>
+            <div class="modal-body">
+                <p>Repasse os dados abaixo para <strong id="pin-modal-nome"></strong>.
+                   No próximo login, será solicitado um novo PIN.</p>
+                <div class="pin-info-box">
+                    <div><span class="pin-info-label">Usuário:</span> <strong id="pin-modal-username"></strong></div>
+                    <div><span class="pin-info-label">PIN temporário:</span> <strong class="pin-codigo" id="pin-modal-pin"></strong></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="document.getElementById('pin-modal').classList.remove('active')">
+                    <i class="fas fa-check"></i> Entendi
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Resultados Eliminatórias -->
     {% if fases_elim %}
     <div class="admin-section">
@@ -304,6 +404,12 @@
 const CSRF_TOKEN = '{{ csrf_token }}';
 const SALVAR_CONFIG_URL = '{% url "bolao:admin_salvar_config" %}';
 const SALVAR_RESULTADO_URL = '{% url "bolao:admin_salvar_resultado" %}';
+const GERAR_PIN_URL = '{% url "bolao:admin_gerar_pin" %}';
+const SALVAR_CLASSIFICACAO_URL = '{% url "bolao:admin_salvar_classificacao" %}';
+const SALVAR_EXTRAS_URL = '{% url "bolao:admin_salvar_extras" %}';
+const CLASSIFICACAO_OFICIAL = {{ classificacao_oficial|safe }};
+const EXTRAS_OFICIAIS = {{ extras_oficiais|safe }};
+const TODAS_SELECOES = {{ todas_selecoes|safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-salvar-config').addEventListener('click', async function() {
@@ -343,7 +449,163 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (e) { showToast('Erro de conexão', 'error'); }
         });
     });
+
+    // === Gerar PIN temporário ===
+    document.querySelectorAll('.btn-gerar-pin').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const participanteId = parseInt(this.dataset.participanteId);
+            const original = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const resp = await fetch(GERAR_PIN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                    body: JSON.stringify({ participante_id: participanteId }),
+                });
+                const result = await resp.json();
+                if (resp.ok) {
+                    document.getElementById('pin-modal-nome').textContent = result.nome;
+                    document.getElementById('pin-modal-username').textContent = result.username;
+                    document.getElementById('pin-modal-pin').textContent = result.pin;
+                    document.getElementById('pin-modal').classList.add('active');
+                } else { showToast(result.error, 'error'); }
+            } catch (e) { showToast('Erro de conexão', 'error'); }
+            this.disabled = false;
+            this.innerHTML = original;
+        });
+    });
+
+    // === Classificação oficial dos grupos ===
+    document.querySelectorAll('.class-oficial-select').forEach(sel => {
+        const grupoId = sel.dataset.grupoId;
+        const pos = sel.dataset.posicao;
+        const oficial = CLASSIFICACAO_OFICIAL[grupoId];
+        if (oficial && oficial[pos]) { sel.value = oficial[pos]; }
+    });
+
+    document.querySelectorAll('.btn-salvar-classificacao').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const grupoId = this.dataset.grupoId;
+            const selects = document.querySelectorAll(`.class-oficial-select[data-grupo-id="${grupoId}"]`);
+            const posicoes = {};
+            selects.forEach(s => { posicoes[s.dataset.posicao] = s.value ? parseInt(s.value) : null; });
+            try {
+                const resp = await fetch(SALVAR_CLASSIFICACAO_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                    body: JSON.stringify({ grupo_id: parseInt(grupoId), posicoes }),
+                });
+                const result = await resp.json();
+                showToast(result.message || result.error, resp.ok ? 'success' : 'error');
+            } catch (e) { showToast('Erro de conexão', 'error'); }
+        });
+    });
+
+    // === Resultado dos palpites especiais (extras oficiais) ===
+    document.querySelectorAll('.extra-oficial-select').forEach(select => {
+        const sorted = [...TODAS_SELECOES].sort((a, b) => a.nome.localeCompare(b.nome));
+        sorted.forEach(sel => {
+            const opt = document.createElement('option');
+            opt.value = sel.id;
+            opt.textContent = sel.nome;
+            select.appendChild(opt);
+        });
+        const tipo = select.dataset.tipo;
+        if (EXTRAS_OFICIAIS[tipo]) { select.value = EXTRAS_OFICIAIS[tipo]; }
+        wrapSearchableSelect(select);
+    });
+
+    document.getElementById('btn-salvar-extras').addEventListener('click', async function() {
+        const extras = {};
+        document.querySelectorAll('.extra-oficial-select').forEach(s => {
+            extras[s.dataset.tipo] = s.value ? parseInt(s.value) : null;
+        });
+        try {
+            const resp = await fetch(SALVAR_EXTRAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                body: JSON.stringify({ extras }),
+            });
+            const result = await resp.json();
+            showToast(result.message || result.error, resp.ok ? 'success' : 'error');
+        } catch (e) { showToast('Erro de conexão', 'error'); }
+    });
 });
+
+// Custom select com busca e bandeiras (reutilizável)
+function wrapSearchableSelect(select) {
+    const sorted = [...TODAS_SELECOES].sort((a, b) => a.nome.localeCompare(b.nome));
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    const display = document.createElement('div');
+    display.className = 'custom-select-display';
+    display.innerHTML = '<span class="csd-placeholder">Selecione...</span>';
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown';
+
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.className = 'custom-select-search';
+    search.placeholder = 'Buscar seleção...';
+    dropdown.appendChild(search);
+
+    const itemsBox = document.createElement('div');
+    itemsBox.className = 'custom-select-items';
+    dropdown.appendChild(itemsBox);
+
+    function flag(sel) {
+        const cod = sel.codigo ? sel.codigo.toLowerCase() : '';
+        return `<img src="/static/images/flags/${cod}.png" class="csd-flag" alt="${cod}">`;
+    }
+
+    sorted.forEach(sel => {
+        const item = document.createElement('div');
+        item.className = 'custom-select-item';
+        item.dataset.value = sel.id;
+        item.dataset.nome = sel.nome.toLowerCase();
+        item.innerHTML = `${flag(sel)} ${sel.nome}`;
+        item.addEventListener('click', () => {
+            select.value = sel.id;
+            select.dispatchEvent(new Event('change'));
+            display.innerHTML = `${flag(sel)} ${sel.nome}`;
+            dropdown.classList.remove('open');
+            wrapper.classList.remove('open');
+        });
+        itemsBox.appendChild(item);
+    });
+
+    search.addEventListener('input', function() {
+        const termo = this.value.toLowerCase().trim();
+        itemsBox.querySelectorAll('.custom-select-item').forEach(it => {
+            it.style.display = it.dataset.nome.includes(termo) ? '' : 'none';
+        });
+    });
+    search.addEventListener('click', e => e.stopPropagation());
+
+    display.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+            if (w !== wrapper) { w.classList.remove('open'); w.querySelector('.custom-select-dropdown').classList.remove('open'); }
+        });
+        const willOpen = !dropdown.classList.contains('open');
+        dropdown.classList.toggle('open');
+        wrapper.classList.toggle('open');
+        if (willOpen) { search.value = ''; search.dispatchEvent(new Event('input')); setTimeout(() => search.focus(), 50); }
+    });
+
+    document.addEventListener('click', () => { dropdown.classList.remove('open'); wrapper.classList.remove('open'); });
+
+    select.style.display = 'none';
+    select.parentElement.appendChild(wrapper);
+    wrapper.appendChild(display);
+    wrapper.appendChild(dropdown);
+
+    if (select.value) {
+        const sel = sorted.find(s => s.id == select.value);
+        if (sel) display.innerHTML = `${flag(sel)} ${sel.nome}`;
+    }
+}
 
 function showToast(message, type) {
     const existing = document.querySelector('.toast');

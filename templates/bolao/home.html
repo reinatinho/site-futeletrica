@@ -117,5 +117,77 @@
         </a>
     </div>
     {% endif %}
+
+    <!-- ===== REGRAS DO BOLÃO ===== -->
+    <div class="regras-section">
+        <h3 class="regras-titulo"><i class="fas fa-scroll"></i> Regras e Pontuação</h3>
+
+        <div class="regras-grid">
+            <div class="regra-card">
+                <div class="regra-pontos">10 pontos</div>
+                <h4>Acerto Perfeito</h4>
+                <p>Quando o palpite e o resultado do jogo são idênticos.</p>
+                <p class="regra-exemplo">
+                    Palpite: Brasil 2x0 Marrocos<br>
+                    Resultado: Brasil 2x0 Marrocos
+                </p>
+            </div>
+            <div class="regra-card">
+                <div class="regra-pontos">8 pontos</div>
+                <h4>Acerto Quase Perfeito</h4>
+                <p>Quando acerta quem será o vencedor e também a quantidade de gols de alguma das seleções.</p>
+                <p class="regra-exemplo">
+                    Palpite: Brasil 3x0 Marrocos<br>
+                    Resultado: Brasil 2x0 Marrocos
+                </p>
+            </div>
+            <div class="regra-card">
+                <div class="regra-pontos">5 pontos</div>
+                <h4>Acerto Resultado</h4>
+                <p>Quando acerta apenas quem será o vencedor ou o empate, sem acertar a quantidade de gols.</p>
+                <p class="regra-exemplo">
+                    Palpite: Brasil 2x1 Marrocos / Resultado: Brasil 4x0 Marrocos<br>
+                    ou Palpite: Brasil 1x1 Marrocos / Resultado: Brasil 2x2 Marrocos
+                </p>
+            </div>
+            <div class="regra-card">
+                <div class="regra-pontos">3 pontos</div>
+                <h4>Acerto Simples</h4>
+                <p>Quando acerta somente a quantidade de gols de alguma das seleções, sem acertar o resultado.</p>
+                <p class="regra-exemplo">
+                    Palpite: Brasil 2x1 Marrocos<br>
+                    Resultado: Brasil 0x1 Marrocos
+                </p>
+            </div>
+        </div>
+
+        <ul class="regras-lista">
+            <li>
+                <i class="fas fa-list-ol"></i>
+                <span>Acerto do <strong>1º, 2º, 3º e 4º lugares</strong> de cada grupo:
+                <strong>8, 6, 4 e 2 pontos</strong>, respectivamente.</span>
+            </li>
+            <li>
+                <i class="fas fa-bolt"></i>
+                <span>A pontuação nos <strong>jogos eliminatórios vale o dobro</strong> (2x) da descrita acima.
+                Ex.: um acerto perfeito vale <strong>20 pontos</strong> a partir dos 16-avos.</span>
+            </li>
+            <li>
+                <i class="fas fa-star"></i>
+                <span>Acerto da seleção <strong>campeã, vice-campeã, terceira colocada e pior colocada</strong>:
+                <strong>20 pontos</strong> cada.</span>
+            </li>
+            <li>
+                <i class="fas fa-balance-scale"></i>
+                <span>São seguidos os critérios de desempate oficiais (menor quantidade de pontos,
+                pior saldo de gols, menos gols marcados, etc).</span>
+            </li>
+            <li>
+                <i class="fas fa-trophy"></i>
+                <span>A premiação será todo o valor arrecadado, dividido em
+                <strong>70% para o 1º lugar, 20% para o 2º e 10% para o 3º</strong>.</span>
+            </li>
+        </ul>
+    </div>
 </div>
 {% endblock %}

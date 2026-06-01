@@ -56,8 +56,39 @@
                     {% endwith %}
                     {% endfor %}
                 </div>
+                {% with classif=item.classificacoes|get_item:grupo.id %}
+                {% if classif %}
+                <div class="publico-classif">
+                    <span class="publico-classif-titulo">Classificação:</span>
+                    {% for c in classif %}
+                    <span class="publico-classif-item">
+                        <strong>{{ c.posicao }}º</strong>
+                        {% if c.selecao %}
+                        <img src="{% static c.selecao|flag_url %}" alt="" class="bandeira-img-sm"> {{ c.selecao.nome }}
+                        {% else %}—{% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
             </div>
             {% endfor %}
+
+            {% if item.extras %}
+            <div class="publico-grupo">
+                <h4><i class="fas fa-medal"></i> Palpites Especiais</h4>
+                <div class="publico-extras">
+                    {% for e in item.extras %}
+                    <span class="publico-classif-item">
+                        <strong>{{ e.tipo }}:</strong>
+                        {% if e.selecao %}
+                        <img src="{% static e.selecao|flag_url %}" alt="" class="bandeira-img-sm"> {{ e.selecao.nome }}
+                        {% else %}—{% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             {% endif %}
 
             {% for fase in fases_elim_publicas %}

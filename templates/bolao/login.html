@@ -90,7 +90,20 @@
             <h3>Conta criada com sucesso!</h3>
         </div>
         <div class="modal-body">
-            <p>Para participar do bolão, envie o comprovante do <strong>PIX de R$ 50,00</strong> para o Admin <strong>Phillipe</strong> pelo WhatsApp:</p>
+            <p>Para participar do bolão, faça um <strong>PIX de R$ 50,00</strong> para <strong>Phillipe Dalpra Camargo</strong> e depois envie o comprovante pelo WhatsApp.</p>
+
+            <div class="pix-pagamento">
+                <img src="{% static 'images/pix_qrcode.png' %}" alt="QR Code PIX" class="pix-qrcode">
+                <span class="pix-label">Escaneie o QR Code ou use o PIX copia e cola:</span>
+                <div class="pix-copia-cola">
+                    <input type="text" id="pix-codigo" class="form-input pix-codigo-input" readonly
+                           value="00020101021126360014br.gov.bcb.pix0114+5541996222162520400005303986540550.005802BR5923PHILLIPE DALPRA CAMARGO6009SAO PAULO622905251KSWJZFMK5HJZ2KVCNQYQVRGJ63049815">
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-copiar-pix">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+            </div>
+
             <a href="https://api.whatsapp.com/send/?phone=%2B554196222162&text&type=phone_number&app_absent=0"
                target="_blank" class="btn btn-whatsapp">
                 <i class="fab fa-whatsapp"></i> Enviar Comprovante via WhatsApp
@@ -120,6 +133,23 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         });
     });
+
+    const btnCopiarPix = document.getElementById('btn-copiar-pix');
+    if (btnCopiarPix) {
+        btnCopiarPix.addEventListener('click', async function() {
+            const codigo = document.getElementById('pix-codigo').value;
+            try {
+                await navigator.clipboard.writeText(codigo);
+            } catch (e) {
+                const input = document.getElementById('pix-codigo');
+                input.select();
+                document.execCommand('copy');
+            }
+            const original = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+            setTimeout(() => { this.innerHTML = original; }, 2000);
+        });
+    }
 });
 </script>
 {% endblock %}

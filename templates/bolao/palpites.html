@@ -95,11 +95,11 @@
                     </div>
 
                     <div class="classificacao-grupo" id="classificacao-{{ grupo.letra }}">
-                        <h4><i class="fas fa-trophy"></i> Classificação Esperada</h4>
+                        <h4><i class="fas fa-chart-simple"></i> Classificação Simulada <small>(com base nos seus placares)</small></h4>
                         <table class="tabela-classificacao">
                             <thead>
                                 <tr>
-                                    <th>#</th><th>Seleção</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>1º</th>
+                                    <th>#</th><th>Seleção</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,15 +109,28 @@
                                     <td class="sel-nome"><img src="{% static selecao|flag_url %}" alt="{{ selecao.codigo }}" class="bandeira-img-sm"> {{ selecao.nome }}</td>
                                     <td class="pts">0</td><td class="vit">0</td><td class="emp">0</td><td class="der">0</td>
                                     <td class="gp">0</td><td class="gc">0</td><td class="sg">0</td>
-                                    <td class="estrela-col">
-                                        <button class="btn-estrela" data-selecao="{{ selecao.id }}" data-grupo="{{ grupo.id }}">
-                                            <i class="far fa-star"></i>
-                                        </button>
-                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+
+                        <div class="meu-palpite-classif" data-grupo-id="{{ grupo.id }}">
+                            <h4><i class="fas fa-clipboard-list"></i> Seu Palpite de Classificação <small>(1º ao 4º lugar)</small></h4>
+                            <div class="classif-posicoes">
+                                {% for pos in "1234" %}
+                                <div class="classif-pos">
+                                    <label>{{ forloop.counter }}º</label>
+                                    <select class="classif-select" data-grupo="{{ grupo.id }}" data-posicao="{{ forloop.counter }}"
+                                            {% if not config.fase_grupos_aberta or fase_grupos_bloqueada %}disabled{% endif %}>
+                                        <option value="">—</option>
+                                        {% for selecao in grupo.selecoes.all %}
+                                        <option value="{{ selecao.id }}">{{ selecao.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -315,12 +328,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // === Inputs de eliminatórias ===
+    function focusProximoElim(atual) {
+        const allInputs = Array.from(document.querySelectorAll('.elim-input:not([disabled])'));
+        const idx = allInputs.indexOf(atual);
+        if (idx > -1 && idx < allInputs.length - 1) {
+            const proximo = allInputs[idx + 1];
+            proximo.focus();
+            proximo.select();
+        }
+    }
     document.querySelectorAll('.elim-input').forEach(input => {
         input.addEventListener('input', function() {
             let val = this.value.replace(/[^0-9]/g, '');
             if (val.length > 1) val = val.charAt(0);
             this.value = val;
             this.classList.toggle('filled', val !== '');
+            if (val !== '') focusProximoElim(this);
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab' || e.key === 'Enter') {
+                e.preventDefault();
+                focusProximoElim(this);
+            }
         });
         input.addEventListener('focus', function() { this.select(); });
     });

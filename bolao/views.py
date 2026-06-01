@@ -1,14 +1,16 @@
 import json
+import random
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .models import (
     Participante, Grupo, Selecao, Jogo,
-    Palpite, PalpiteClassificacao, PalpiteExtra, ConfigBolao
+    Palpite, PalpiteClassificacao, PalpiteExtra, ConfigBolao,
+    ResultadoClassificacao, ResultadoExtra,
 )
 from .forms import LoginForm, CadastroForm
-from .pontuacao import gerar_classificacao_geral, calcular_pontos_jogo
+from .pontuacao import gerar_classificacao_geral, calcular_pontos_jogo, multiplicador_fase
 
 
 def get_participante(request):
@@ -43,6 +45,8 @@ def login_view(request):
                     p = Participante.objects.get(username=username)
                     if p.check_pin(pin):
                         request.session['participante_id'] = p.id
+                        if p.precisa_redefinir_pin:
+                            return redirect('bolao:redefinir_pin')
                         return redirect('bolao:palpites')
                     else:
                         messages.error(request, 'Usuário ou PIN incorreto.')
@@ -81,6 +85,9 @@ def palpites_view(request):
     participante = get_participante(request)
     if not participante:
         return redirect('bolao:login')
+
+    if participante.precisa_redefinir_pin:
+        return redirect('bolao:redefinir_pin')
 
     config = ConfigBolao.get_config()
     if not config.fase_grupos_aberta:
@@ -278,6 +285,9 @@ def palpites_publicos_view(request):
                     'jogos': jogos,
                 })
 
+    # Mapa de seleções para exibir nomes nas classificações/extras
+    selecoes_map = {s.id: s for s in Selecao.objects.all()}
+
     dados_participantes = []
     for p in participantes:
         palpites = {}
@@ -287,9 +297,32 @@ def palpites_publicos_view(request):
                 'fora': palpite.gols_fora,
                 'pontos': palpite.pontos,
             }
+
+        # Palpites de classificação por grupo (1º ao 4º)
+        classificacoes = {}
+        for pc in PalpiteClassificacao.objects.filter(participante=p):
+            classificacoes.setdefault(pc.grupo_id, {})[pc.posicao] = selecoes_map.get(pc.selecao_id)
+
+        classif_por_grupo = {}
+        for grupo_id, posicoes in classificacoes.items():
+            classif_por_grupo[grupo_id] = [
+                {'posicao': pos, 'selecao': posicoes.get(pos)} for pos in range(1, 5)
+            ]
+
+        # Palpites especiais
+        extras = []
+        tipo_label = dict(PalpiteExtra.TIPO_CHOICES)
+        for pe in PalpiteExtra.objects.filter(participante=p):
+            extras.append({
+                'tipo': tipo_label.get(pe.tipo, pe.tipo),
+                'selecao': selecoes_map.get(pe.selecao_id),
+            })
+
         dados_participantes.append({
             'participante': p,
             'palpites': palpites,
+            'classificacoes': classif_por_grupo,
+            'extras': extras,
         })
 
     return render(request, 'bolao/publico.html', {
@@ -336,15 +369,61 @@ def admin_painel_view(request):
     total_participantes = participantes.count()
     total_jogos = Jogo.objects.count()
 
+    # Definição das fases para o progresso (rótulo curto)
+    fases_def = [
+        ('grupos', 'Grupos'),
+        ('16avos', '16-avos'),
+        ('oitavas', 'Oitavas'),
+        ('quartas', 'Quartas'),
+        ('semi', 'Semi'),
+        ('terceiro', '3º Lugar'),
+        ('final', 'Final'),
+    ]
+
+    # Jogos com equipes definidas por fase (só estes podem receber palpite)
+    jogos_por_fase = {}
+    for fase_cod, _ in fases_def:
+        if fase_cod == 'grupos':
+            ids = set(Jogo.objects.filter(fase='grupos').values_list('id', flat=True))
+        else:
+            ids = set(Jogo.objects.filter(
+                fase=fase_cod,
+                selecao_casa__isnull=False,
+                selecao_fora__isnull=False,
+            ).values_list('id', flat=True))
+        jogos_por_fase[fase_cod] = ids
+
     participantes_status = []
     for p in participantes:
-        palpites_feitos = Palpite.objects.filter(participante=p).count()
+        palpites_jogo_ids = set(
+            Palpite.objects.filter(participante=p).values_list('jogo_id', flat=True)
+        )
+        palpites_feitos = len(palpites_jogo_ids)
+
+        fases_progresso = []
+        for fase_cod, fase_nome in fases_def:
+            ids_fase = jogos_por_fase[fase_cod]
+            total_fase = len(ids_fase)
+            feito_fase = len(palpites_jogo_ids & ids_fase)
+            fases_progresso.append({
+                'nome': fase_nome,
+                'feito': feito_fase,
+                'total': total_fase,
+                'completo': total_fase > 0 and feito_fase >= total_fase,
+                'percentual': round(feito_fase / total_fase * 100) if total_fase else 0,
+            })
+
+        grupos_total = len(jogos_por_fase['grupos'])
+        grupos_feito = len(palpites_jogo_ids & jogos_por_fase['grupos'])
+        completo_grupos = grupos_total > 0 and grupos_feito >= grupos_total
+
         participantes_status.append({
             'participante': p,
             'palpites_feitos': palpites_feitos,
             'total_esperado': total_jogos,
-            'completo': palpites_feitos >= total_jogos,
-            'percentual': round(palpites_feitos / total_jogos * 100) if total_jogos else 0,
+            'completo': completo_grupos,
+            'percentual': round(grupos_feito / grupos_total * 100) if grupos_total else 0,
+            'fases_progresso': fases_progresso,
         })
 
     participantes_status.sort(key=lambda x: -x['palpites_feitos'])
@@ -353,7 +432,7 @@ def admin_painel_view(request):
     pendentes = total_participantes - completos
 
     grupos = Grupo.objects.prefetch_related(
-        'jogos', 'jogos__selecao_casa', 'jogos__selecao_fora'
+        'selecoes', 'jogos', 'jogos__selecao_casa', 'jogos__selecao_fora'
     ).all()
 
     fases_elim = []
@@ -370,6 +449,17 @@ def admin_painel_view(request):
                 'jogos': jogos,
             })
 
+    # Resultados oficiais já definidos (classificação dos grupos)
+    classificacao_oficial = {}
+    for rc in ResultadoClassificacao.objects.all():
+        classificacao_oficial.setdefault(rc.grupo_id, {})[rc.posicao] = rc.selecao_id
+
+    extras_oficiais = {re.tipo: re.selecao_id for re in ResultadoExtra.objects.all()}
+
+    todas_selecoes = list(
+        Selecao.objects.values('id', 'nome', 'codigo', 'grupo_id').order_by('nome')
+    )
+
     return render(request, 'bolao/admin_painel.html', {
         'config': config,
         'participantes_status': participantes_status,
@@ -378,6 +468,9 @@ def admin_painel_view(request):
         'pendentes': pendentes,
         'grupos': grupos,
         'fases_elim': fases_elim,
+        'classificacao_oficial': json.dumps(classificacao_oficial),
+        'extras_oficiais': json.dumps(extras_oficiais),
+        'todas_selecoes': json.dumps(todas_selecoes),
     })
 
 
@@ -407,10 +500,12 @@ def admin_salvar_resultado(request):
 
     # Recalcular pontos dos palpites deste jogo
     palpites = Palpite.objects.filter(jogo=jogo)
+    mult = multiplicador_fase(jogo.fase)
     for palpite in palpites:
         pts = calcular_pontos_jogo(
             palpite.gols_casa, palpite.gols_fora,
-            jogo.gols_casa, jogo.gols_fora
+            jogo.gols_casa, jogo.gols_fora,
+            mult
         )
         palpite.pontos = pts
         palpite.save(update_fields=['pontos'])
@@ -629,6 +724,129 @@ def admin_eliminatorias_view(request):
         'config': config,
         'fases': fases,
         'todas_selecoes': json.dumps(todas_selecoes),
+    })
+
+
+@admin_required
+@require_POST
+def admin_gerar_pin(request):
+    """Gera um PIN temporário para um participante (recuperação de acesso)."""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    participante_id = data.get('participante_id')
+    try:
+        p = Participante.objects.get(id=participante_id)
+    except Participante.DoesNotExist:
+        return JsonResponse({'error': 'Participante não encontrado'}, status=404)
+
+    pin_temp = f'{random.randint(0, 9999):04d}'
+    p.set_pin(pin_temp)
+    p.precisa_redefinir_pin = True
+    p.save(update_fields=['pin_hash', 'precisa_redefinir_pin'])
+
+    return JsonResponse({
+        'success': True,
+        'pin': pin_temp,
+        'username': p.username,
+        'nome': p.nome_completo,
+        'message': f'PIN temporário gerado para {p.nome_completo}',
+    })
+
+
+@admin_required
+@require_POST
+def admin_salvar_classificacao(request):
+    """Admin define a classificação final oficial de um grupo (1º a 4º)."""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    grupo_id = data.get('grupo_id')
+    posicoes = data.get('posicoes', {})
+
+    try:
+        grupo = Grupo.objects.get(id=grupo_id)
+    except Grupo.DoesNotExist:
+        return JsonResponse({'error': 'Grupo não encontrado'}, status=404)
+
+    selecionadas = [sel_id for sel_id in posicoes.values() if sel_id]
+    if len(set(selecionadas)) != len(selecionadas):
+        return JsonResponse({'error': 'Cada seleção só pode ocupar uma posição'}, status=400)
+
+    for posicao_str, selecao_id in posicoes.items():
+        posicao = int(posicao_str)
+        if selecao_id:
+            ResultadoClassificacao.objects.update_or_create(
+                grupo=grupo,
+                posicao=posicao,
+                defaults={'selecao_id': int(selecao_id)},
+            )
+        else:
+            ResultadoClassificacao.objects.filter(grupo=grupo, posicao=posicao).delete()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Classificação oficial do Grupo {grupo.letra} salva!',
+    })
+
+
+@admin_required
+@require_POST
+def admin_salvar_extras(request):
+    """Admin define o resultado oficial dos palpites especiais."""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+    extras = data.get('extras', {})
+    tipos_validos = {t for t, _ in ResultadoExtra.TIPO_CHOICES}
+
+    for tipo, selecao_id in extras.items():
+        if tipo not in tipos_validos:
+            continue
+        if selecao_id:
+            ResultadoExtra.objects.update_or_create(
+                tipo=tipo,
+                defaults={'selecao_id': int(selecao_id)},
+            )
+        else:
+            ResultadoExtra.objects.filter(tipo=tipo).delete()
+
+    return JsonResponse({'success': True, 'message': 'Resultados especiais salvos!'})
+
+
+def redefinir_pin_view(request):
+    """Tela para o participante escolher um novo PIN após usar o PIN temporário."""
+    participante = get_participante(request)
+    if not participante:
+        return redirect('bolao:login')
+
+    if not participante.precisa_redefinir_pin:
+        return redirect('bolao:palpites')
+
+    erro = None
+    if request.method == 'POST':
+        pin = request.POST.get('pin', '')
+        pin_confirma = request.POST.get('pin_confirma', '')
+        if not pin.isdigit() or len(pin) != 4:
+            erro = 'O PIN deve conter exatamente 4 dígitos numéricos.'
+        elif pin != pin_confirma:
+            erro = 'Os PINs não coincidem.'
+        else:
+            participante.set_pin(pin)
+            participante.precisa_redefinir_pin = False
+            participante.save(update_fields=['pin_hash', 'precisa_redefinir_pin'])
+            messages.success(request, 'PIN redefinido com sucesso! Faça seus palpites.')
+            return redirect('bolao:palpites')
+
+    return render(request, 'bolao/redefinir_pin.html', {
+        'participante': participante,
+        'erro': erro,
     })
 
 

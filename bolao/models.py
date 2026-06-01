@@ -7,6 +7,7 @@ class Participante(models.Model):
     nome = models.CharField(max_length=50)
     sobrenome = models.CharField(max_length=50)
     pin_hash = models.CharField(max_length=64)
+    precisa_redefinir_pin = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -139,6 +140,31 @@ class PalpiteExtra(models.Model):
 
     def __str__(self):
         return f"{self.participante} - {self.get_tipo_display()}: {self.selecao}"
+
+
+class ResultadoClassificacao(models.Model):
+    """Classificação final oficial de um grupo, definida pelo admin (1º a 4º)."""
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='resultado_classificacao')
+    selecao = models.ForeignKey(Selecao, on_delete=models.CASCADE)
+    posicao = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = ['grupo', 'posicao']
+        ordering = ['grupo', 'posicao']
+
+    def __str__(self):
+        return f"Grupo {self.grupo.letra} - {self.posicao}º: {self.selecao}"
+
+
+class ResultadoExtra(models.Model):
+    """Resultado oficial dos palpites especiais (campeão, vice, 3º, pior)."""
+    TIPO_CHOICES = PalpiteExtra.TIPO_CHOICES
+
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, unique=True)
+    selecao = models.ForeignKey(Selecao, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.get_tipo_display()}: {self.selecao}"
 
 
 class ConfigBolao(models.Model):

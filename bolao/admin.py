@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Participante, Grupo, Selecao, Jogo,
-    Palpite, PalpiteClassificacao, PalpiteExtra, ConfigBolao
+    Palpite, PalpiteClassificacao, PalpiteExtra, ConfigBolao,
+    ResultadoClassificacao, ResultadoExtra,
 )
 
 
@@ -44,6 +45,17 @@ class PalpiteClassificacaoAdmin(admin.ModelAdmin):
 class PalpiteExtraAdmin(admin.ModelAdmin):
     list_display = ['participante', 'tipo', 'selecao']
     list_filter = ['tipo']
+
+
+@admin.register(ResultadoClassificacao)
+class ResultadoClassificacaoAdmin(admin.ModelAdmin):
+    list_display = ['grupo', 'posicao', 'selecao']
+    list_filter = ['grupo']
+
+
+@admin.register(ResultadoExtra)
+class ResultadoExtraAdmin(admin.ModelAdmin):
+    list_display = ['tipo', 'selecao']
 
 
 @admin.register(ConfigBolao)
