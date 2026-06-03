@@ -8,12 +8,12 @@ GRUPOS_DATA = {
     'A': [
         ('México', 'MEX', '🇲🇽'),
         ('África do Sul', 'RSA', '🇿🇦'),
-        ('República da Coreia', 'KOR', '🇰🇷'),
-        ('República Tcheca', 'CZE', '🇨🇿'),
+        ('Coreia do Sul', 'KOR', '🇰🇷'),
+        ('Rep. Tcheca', 'CZE', '🇨🇿'),
     ],
     'B': [
         ('Canadá', 'CAN', '🇨🇦'),
-        ('Bósnia e Herzegovina', 'BIH', '🇧🇦'),
+        ('Bósnia', 'BIH', '🇧🇦'),
         ('Catar', 'QAT', '🇶🇦'),
         ('Suíça', 'SUI', '🇨🇭'),
     ],
@@ -24,7 +24,7 @@ GRUPOS_DATA = {
         ('Escócia', 'SCO', '🏴\U000e0067\U000e0062\U000e0073\U000e0063\U000e0074\U000e007f'),
     ],
     'D': [
-        ('Estados Unidos', 'USA', '🇺🇸'),
+        ('EUA', 'USA', '🇺🇸'),
         ('Paraguai', 'PAR', '🇵🇾'),
         ('Austrália', 'AUS', '🇦🇺'),
         ('Turquia', 'TUR', '🇹🇷'),
@@ -32,7 +32,7 @@ GRUPOS_DATA = {
     'E': [
         ('Alemanha', 'GER', '🇩🇪'),
         ('Curaçau', 'CUW', '🇨🇼'),
-        ('Costa do Marfim', 'CIV', '🇨🇮'),
+        ('C. do Marfim', 'CIV', '🇨🇮'),
         ('Equador', 'ECU', '🇪🇨'),
     ],
     'F': [
@@ -67,7 +67,7 @@ GRUPOS_DATA = {
     ],
     'K': [
         ('Portugal', 'POR', '🇵🇹'),
-        ('República Democrática do Congo', 'COD', '🇨🇩'),
+        ('Congo', 'COD', '🇨🇩'),
         ('Uzbequistão', 'UZB', '🇺🇿'),
         ('Colômbia', 'COL', '🇨🇴'),
     ],
@@ -104,7 +104,7 @@ JOGOS_DATA = [
     # Grupo D
     ('D', 'USA', 'PAR', '2026-06-12 22:00'),
     ('D', 'AUS', 'TUR', '2026-06-14 01:00'),
-    ('D', 'TUR', 'PAR', '2026-06-19 00:00'),
+    ('D', 'TUR', 'PAR', '2026-06-20 01:00'),
     ('D', 'USA', 'AUS', '2026-06-19 16:00'),
     ('D', 'TUR', 'USA', '2026-06-25 23:00'),
     ('D', 'PAR', 'AUS', '2026-06-25 23:00'),
@@ -118,7 +118,7 @@ JOGOS_DATA = [
     # Grupo F
     ('F', 'NED', 'JPN', '2026-06-14 17:00'),
     ('F', 'SWE', 'TUN', '2026-06-14 23:00'),
-    ('F', 'TUN', 'JPN', '2026-06-20 23:00'),
+    ('F', 'TUN', 'JPN', '2026-06-21 01:00'),
     ('F', 'NED', 'SWE', '2026-06-20 14:00'),
     ('F', 'JPN', 'SWE', '2026-06-25 20:00'),
     ('F', 'TUN', 'NED', '2026-06-25 20:00'),
@@ -149,10 +149,10 @@ JOGOS_DATA = [
     ('J', 'ARG', 'AUT', '2026-06-22 14:00'),
     ('J', 'JOR', 'ALG', '2026-06-23 00:00'),
     ('J', 'ALG', 'AUT', '2026-06-27 23:00'),
-    ('J', 'JOR', 'ARG', '2026-06-28 23:00'),
+    ('J', 'JOR', 'ARG', '2026-06-27 23:00'),
     # Grupo K
     ('K', 'POR', 'COD', '2026-06-17 14:00'),
-    ('K', 'UZB', 'COL', '2026-06-17 21:00'),
+    ('K', 'UZB', 'COL', '2026-06-17 23:00'),
     ('K', 'POR', 'UZB', '2026-06-23 14:00'),
     ('K', 'COL', 'COD', '2026-06-23 23:00'),
     ('K', 'COL', 'POR', '2026-06-27 20:30'),

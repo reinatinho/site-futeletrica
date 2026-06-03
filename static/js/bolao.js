@@ -194,13 +194,20 @@ function loadExistingData() {
         updateGrupoStatus(grupo);
     });
 
-    // Palpites de classificação existentes (1º ao 4º por grupo)
+    // Palpites de classificação existentes (1º ao 4º por grupo).
+    // Se já houver palpite salvo, marca o grupo como "manual" para não sobrescrever.
     for (const [grupoId, posicoes] of Object.entries(CLASSIFICACOES_EXISTENTES)) {
+        let algum = false;
         for (const [posicao, selecaoId] of Object.entries(posicoes)) {
             const select = document.querySelector(`.classif-select[data-grupo="${grupoId}"][data-posicao="${posicao}"]`);
             if (select && selecaoId) {
                 select.value = selecaoId;
+                algum = true;
             }
+        }
+        if (algum) {
+            const box = document.querySelector(`.meu-palpite-classif[data-grupo-id="${grupoId}"]`);
+            if (box) box.dataset.manual = '1';
         }
     }
 
@@ -220,7 +227,12 @@ function initClassifSelects() {
                 });
             });
         }
-        selects.forEach(sel => sel.addEventListener('change', atualizarOpcoes));
+        box._refreshOpcoes = atualizarOpcoes;
+        selects.forEach(sel => sel.addEventListener('change', function() {
+            // Ajuste manual do usuário: para de preencher automaticamente
+            box.dataset.manual = '1';
+            atualizarOpcoes();
+        }));
         atualizarOpcoes();
     });
 }
@@ -303,6 +315,21 @@ function updateClassificacao(grupoLetra) {
         // Reordenar visualmente
         tabela.appendChild(row);
     });
+
+    // Auto-preencher o palpite de classificação com a ordem simulada
+    // (somente quando o grupo está completo e o usuário ainda não ajustou manualmente)
+    const box = grupoCard.querySelector('.meu-palpite-classif');
+    if (box && box.dataset.manual !== '1') {
+        const inputs = grupoCard.querySelectorAll('.placar-input');
+        const allFilled = inputs.length > 0 && Array.from(inputs).every(i => i.value !== '');
+        if (allFilled) {
+            sorted.forEach((s, idx) => {
+                const sel = box.querySelector(`.classif-select[data-posicao="${idx + 1}"]`);
+                if (sel) sel.value = s.id;
+            });
+            if (typeof box._refreshOpcoes === 'function') box._refreshOpcoes();
+        }
+    }
 }
 
 function updateGrupoStatus(grupoLetra) {
@@ -437,9 +464,14 @@ function loadRascunho() {
         }
         if (data.classificacoes) {
             for (const [grupoId, posicoes] of Object.entries(data.classificacoes)) {
+                let algum = false;
                 for (const [posicao, selecaoId] of Object.entries(posicoes)) {
                     const select = document.querySelector(`.classif-select[data-grupo="${grupoId}"][data-posicao="${posicao}"]`);
-                    if (select && selecaoId) select.value = selecaoId;
+                    if (select && selecaoId) { select.value = selecaoId; algum = true; }
+                }
+                if (algum) {
+                    const box = document.querySelector(`.meu-palpite-classif[data-grupo-id="${grupoId}"]`);
+                    if (box) box.dataset.manual = '1';
                 }
             }
             initClassifSelects();
