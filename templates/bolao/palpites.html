@@ -18,8 +18,9 @@
     <div class="palpites-header">
         <h2><i class="fas fa-futbol"></i> Meus Palpites</h2>
         <p class="deadline-info">
-            <i class="fas fa-clock"></i> Prazo fase de grupos: <strong>08 de Junho de 2026</strong>
+            <i class="fas fa-clock"></i> Prazo da fase de grupos: <strong>{{ prazo_grupos }}</strong>
         </p>
+        <p class="deadline-sub">Após o prazo de cada fase, o envio e o ajuste dos palpites ficam bloqueados.</p>
     </div>
 
     <!-- ===== FASE DE GRUPOS ===== -->
@@ -116,6 +117,10 @@
 
                         <div class="meu-palpite-classif" data-grupo-id="{{ grupo.id }}">
                             <h4><i class="fas fa-clipboard-list"></i> Seu Palpite de Classificação <small>(1º ao 4º lugar)</small></h4>
+                            <p class="classif-aviso">
+                                * Preenchido de forma automática de acordo com os seus placares.
+                                Você deve revisar em caso de empate de pontuação ou ajustar conforme desejar.
+                            </p>
                             <div class="classif-posicoes">
                                 {% for pos in "1234" %}
                                 <div class="classif-pos">
@@ -207,6 +212,14 @@
             </div>
         </div>
         <div class="etapa-content" id="etapa-{{ fase.codigo }}-content" style="display: none;">
+            <p class="deadline-info" style="margin: 0.75rem 0 0;">
+                <i class="fas fa-clock"></i> Prazo: <strong>{{ fase.prazo }}</strong>
+            </p>
+            {% if fase.bloqueada %}
+            <div class="alert alert-error" style="margin: 0.75rem 0 0;">
+                <i class="fas fa-lock"></i> Esta fase está bloqueada. Não é possível enviar ou editar palpites.
+            </div>
+            {% endif %}
             <div class="jogos-list" style="padding: 1rem 0;">
                 {% for jogo in fase.jogos %}
                 <div class="jogo-row jogo-row-elim" data-jogo-id="{{ jogo.id }}"

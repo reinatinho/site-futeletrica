@@ -2129,6 +2129,13 @@ body {
     font-size: 0.75rem;
 }
 
+.classif-aviso {
+    font-size: 0.75rem;
+    color: var(--warning);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
 .classif-posicoes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2238,6 +2245,51 @@ body {
 
 .regras-lista strong {
     color: var(--text);
+}
+
+/* ===== Prazos ===== */
+.prazos-box {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.prazos-titulo {
+    color: var(--primary);
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.prazos-aviso {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.85rem;
+}
+
+.prazos-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    max-width: 420px;
+}
+
+.prazos-tabela td {
+    padding: 0.5rem 0.5rem;
+    border-bottom: 1px solid rgba(51, 51, 51, 0.5);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.prazos-tabela .prazo-data {
+    text-align: right;
+    color: var(--primary);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.deadline-sub {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
 }
 
 /* ===== Classificação/Extras no público ===== */

@@ -39,12 +39,17 @@
     <div class="fase-card" id="fase-{{ fase.codigo }}">
         <div class="fase-header">
             <h3>{{ fase.nome }}</h3>
-            {% if fase.aberta %}
+            {% if fase.bloqueada %}
+            <span class="badge badge-error"><i class="fas fa-lock"></i> Bloqueada</span>
+            {% elif fase.aberta %}
             <span class="badge badge-success"><i class="fas fa-unlock"></i> Aberta</span>
             {% else %}
             <span class="badge badge-warning"><i class="fas fa-lock"></i> Fechada</span>
             {% endif %}
         </div>
+        <p class="deadline-info" style="margin-bottom: 0.75rem;">
+            <i class="fas fa-clock"></i> Prazo: <strong>{{ fase.prazo }}</strong>
+        </p>
 
         <div class="jogos-list">
             {% for jogo in fase.jogos %}
@@ -61,11 +66,11 @@
                     <div class="placar-inputs">
                         <input type="number" min="0" max="9" class="placar-input gols-casa"
                                data-jogo="{{ jogo.id }}" data-tipo="casa"
-                               {% if not fase.aberta %}disabled{% endif %}>
+                               {% if not fase.aberta or fase.bloqueada %}disabled{% endif %}>
                         <span class="placar-x">×</span>
                         <input type="number" min="0" max="9" class="placar-input gols-fora"
                                data-jogo="{{ jogo.id }}" data-tipo="fora"
-                               {% if not fase.aberta %}disabled{% endif %}>
+                               {% if not fase.aberta or fase.bloqueada %}disabled{% endif %}>
                     </div>
                     <div class="time-fora">
                         <span class="time-nome">{{ jogo.selecao_fora.nome }}</span>

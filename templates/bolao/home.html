@@ -173,6 +173,13 @@
                 Ex.: um acerto perfeito vale <strong>20 pontos</strong> a partir dos 16-avos.</span>
             </li>
             <li>
+                <i class="fas fa-stopwatch"></i>
+                <span>Nos jogos eliminatórios, o <strong>placar final se dará após o fim da prorrogação</strong>.
+                Ex.: Brasil 3x3 Espanha — mesmo que o Brasil passe nos pênaltis, o palpite perfeito (20 pontos)
+                será 3x3. Se o jogo terminar 2x2 nos 90 minutos e 3x3 na prorrogação, vale sempre o
+                placar ao final da prorrogação (3x3).</span>
+            </li>
+            <li>
                 <i class="fas fa-star"></i>
                 <span>Acerto da seleção <strong>campeã, vice-campeã, terceira colocada e pior colocada</strong>:
                 <strong>20 pontos</strong> cada.</span>
@@ -188,6 +195,21 @@
                 <strong>70% para o 1º lugar, 20% para o 2º e 10% para o 3º</strong>.</span>
             </li>
         </ul>
+
+        <div class="prazos-box">
+            <h4 class="prazos-titulo"><i class="fas fa-clock"></i> Prazos de Encerramento dos Palpites</h4>
+            <p class="prazos-aviso">Após o horário de cada fase, o envio e o ajuste dos palpites ficam bloqueados.</p>
+            <table class="prazos-tabela">
+                <tbody>
+                    {% for nome, prazo in prazos_lista %}
+                    <tr>
+                        <td>{{ nome }}</td>
+                        <td class="prazo-data">{{ prazo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

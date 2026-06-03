@@ -11,6 +11,7 @@ from .models import (
 )
 from .forms import LoginForm, CadastroForm
 from .pontuacao import gerar_classificacao_geral, calcular_pontos_jogo, multiplicador_fase
+from .prazos import prazo_passou, prazo_label, PRAZOS_LABEL
 
 
 def get_participante(request):
@@ -117,7 +118,7 @@ def palpites_view(request):
 
     todas_selecoes = list(Selecao.objects.values('id', 'nome', 'bandeira_emoji', 'codigo', 'grupo_id'))
 
-    fase_grupos_bloqueada = config.lock_fase_grupos
+    fase_grupos_bloqueada = config.lock_fase_grupos or prazo_passou('grupos')
 
     todas_fases_elim = []
     fase_elim_map = [
@@ -138,7 +139,8 @@ def palpites_view(request):
                 'codigo': fase_cod,
                 'nome': fase_nome,
                 'aberta': aberta,
-                'bloqueada': bloqueada,
+                'bloqueada': bloqueada or prazo_passou(fase_cod),
+                'prazo': prazo_label(fase_cod),
                 'jogos': jogos,
             })
 
@@ -162,6 +164,7 @@ def palpites_view(request):
         'todas_selecoes': json.dumps(todas_selecoes),
         'config': config,
         'fase_grupos_bloqueada': fase_grupos_bloqueada,
+        'prazo_grupos': prazo_label('grupos'),
         'todas_fases_elim': todas_fases_elim,
         'palpites_elim_existentes': json.dumps(palpites_elim_existentes),
     })
@@ -177,7 +180,7 @@ def salvar_palpites(request):
     if not config.fase_grupos_aberta:
         return JsonResponse({'error': 'Palpites da fase de grupos estão fechados'}, status=403)
 
-    if config.lock_fase_grupos:
+    if config.lock_fase_grupos or prazo_passou('grupos'):
         return JsonResponse({'error': 'A fase de grupos está bloqueada. Não é possível enviar ou editar palpites.'}, status=403)
 
     try:
@@ -237,12 +240,23 @@ def home_view(request):
     ).count()
     total_jogos = Jogo.objects.count()
 
+    prazos_lista = [
+        ('Fase de Grupos', PRAZOS_LABEL['grupos']),
+        ('16-avos de Final', PRAZOS_LABEL['16avos']),
+        ('Oitavas de Final', PRAZOS_LABEL['oitavas']),
+        ('Quartas de Final', PRAZOS_LABEL['quartas']),
+        ('Semifinais', PRAZOS_LABEL['semi']),
+        ('Disputa 3º Lugar', PRAZOS_LABEL['terceiro']),
+        ('Final', PRAZOS_LABEL['final']),
+    ]
+
     return render(request, 'bolao/home.html', {
         'participante': participante,
         'classificacao': classificacao,
         'config': config,
         'jogos_com_resultado': jogos_com_resultado,
         'total_jogos': total_jogos,
+        'prazos_lista': prazos_lista,
     })
 
 
@@ -572,7 +586,8 @@ def palpites_eliminatorias_view(request):
                 'codigo': fase_cod,
                 'nome': fase_nome,
                 'aberta': aberta,
-                'bloqueada': bloqueada,
+                'bloqueada': bloqueada or prazo_passou(fase_cod),
+                'prazo': prazo_label(fase_cod),
                 'jogos': jogos,
             })
 
@@ -618,12 +633,12 @@ def salvar_palpites_eliminatorias(request):
     }
 
     fase_lock_map = {
-        '16avos': config.lock_16avos,
-        'oitavas': config.lock_oitavas,
-        'quartas': config.lock_quartas,
-        'semi': config.lock_semi,
-        'terceiro': config.lock_terceiro,
-        'final': config.lock_final,
+        '16avos': config.lock_16avos or prazo_passou('16avos'),
+        'oitavas': config.lock_oitavas or prazo_passou('oitavas'),
+        'quartas': config.lock_quartas or prazo_passou('quartas'),
+        'semi': config.lock_semi or prazo_passou('semi'),
+        'terceiro': config.lock_terceiro or prazo_passou('terceiro'),
+        'final': config.lock_final or prazo_passou('final'),
     }
 
     for jogo_id_str, valores in palpites_data.items():
