@@ -38,9 +38,13 @@ def get_prazo(fase):
 
 
 def prazo_passou(fase):
-    """True se o prazo da fase já passou."""
-    prazo = get_prazo(fase)
-    return prazo is not None and timezone.now() > prazo
+    """Bloqueio automático por data/hora DESATIVADO (hotfix 28/06/2026).
+
+    O controle de bloqueio/desbloqueio das fases é feito exclusivamente pelo
+    admin (campos lock_* da ConfigBolao). Os prazos continuam sendo exibidos
+    apenas como informação, mas não bloqueiam mais os palpites automaticamente.
+    """
+    return False
 
 
 def prazo_label(fase):
